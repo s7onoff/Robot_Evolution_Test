@@ -38,7 +38,7 @@ namespace Robot_Evolution
         {
             foreach (int nodeNumber in InitialData.NonMovableNodes)
             {
-                this.NonMovableNodes.Add(new Node())
+                this.NonMovableNodes.Add(new Node(InitialData.));
             }
             
         }

@@ -1,4 +1,6 @@
-﻿using RobotOM;
+﻿using System;
+using System.Collections.Generic;
+using RobotOM;
 
 namespace Robot_Evolution
 {
@@ -16,6 +18,9 @@ namespace Robot_Evolution
             Project.Open(InitialData.OriginalFile);
 
             CalcLines();
+            // TODO: Написать считывание всех узлов, приведение их к собственным классам, дописать класс нодов
+            // var allNodes = (List<int>)RobotStructure.Nodes.GetAll();
+            // InitialData.InitialNodes = CalcNodesCoords(allNodes);
 
             Project.Close();
         }
@@ -50,8 +55,6 @@ namespace Robot_Evolution
             return (yMin, yMax);
         }
 
-
-
         static void CalcLines()
         {
             foreach (var line in InitialData.Lines.Keys)
@@ -72,6 +75,18 @@ namespace Robot_Evolution
             {
                 InitialData.ArcsBoundaries.Add(arc, CalcRadiusBoundaries(arc));
             }
+        }
+
+        static Dictionary<int, (double x, double y)> CalcNodesCoords(List<int> nodes)
+        {
+            var nodesCoordinates = new Dictionary<int, (double x, double y)>();
+            foreach (var node in nodes)
+            {
+                var x = ((IRobotNode)RobotStructure.Nodes.Get(node)).X;
+                var y = ((IRobotNode)RobotStructure.Nodes.Get(node)).Y;
+                nodesCoordinates.Add(node, (x, y));
+            }
+            return nodesCoordinates;
         }
     }
 }

@@ -11,6 +11,8 @@ namespace Robot_Evolution
         public static string OriginalFile = Path.Combine(WorkingDirectory, "Slab_Slice_00.rtd");
         #endregion SystemData
 
+
+        public static List<Instance.Node> InitialNodes { get; set; }
         public static Dictionary<BoundaryArc, (double R, int Node1, int Node2)> Arcs { get; set; } = 
             new Dictionary<BoundaryArc, (double R, int Node1, int Node2)> 
             { 
