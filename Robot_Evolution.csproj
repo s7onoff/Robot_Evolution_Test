@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{28A861FE-D8B6-4715-B096-BBE6CF2C4437}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Robot_Romb_Test</RootNamespace>
-    <AssemblyName>Robot_Romb_Test</AssemblyName>
+    <RootNamespace>Robot_Evolution</RootNamespace>
+    <AssemblyName>Robot_Evolution</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
