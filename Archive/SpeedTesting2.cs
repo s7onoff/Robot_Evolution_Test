@@ -9,7 +9,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Robot_Evolution
+namespace Robot_Evolution_archive
 {
     #region enums
 
@@ -35,9 +35,9 @@ namespace Robot_Evolution
 
     #endregion
 
-    class Program
+    class Program_test
     {
-        static void Main(string[] args)
+        static void __Main(string[] args)
         {
             var stopwatch = new Stopwatch();
             var rnd = new Random();
@@ -49,8 +49,8 @@ namespace Robot_Evolution
 
             var dir = @"C:\Users\Sesemenov\Documents\!tmp\2022-08-11";
 
-            var rtdFile = Path.Combine(dir, "Slab_Evo_00.rtd");
-            var rndFile = Path.Combine(dir, "Slab_Evo_" + rnd.Next(1000).ToString() + ".rtd");
+            var rtdFile = Path.Combine(dir, "Rombic_beams_20220808_00.rtd");
+            var rndFile = Path.Combine(dir, "Rombic_beams_20220808_" + rnd.Next(100).ToString() + ".rtd");
 
             proj.Open(rtdFile);
 
@@ -63,9 +63,9 @@ namespace Robot_Evolution
             stopwatch.Reset();
 
             stopwatch.Start();
-
-
-
+            
+            
+            
             var listNodes = new List<IRobotNode>();
             var listNodeNumbers = new List<int>();
 
@@ -105,26 +105,9 @@ namespace Robot_Evolution
             stopwatch.Reset();
 
             stopwatch.Start();
-            var labels = structure.Labels.GetAll();
+            // var labels = structure.Labels.GetAll();
             stopwatch.Stop();
-            Console.WriteLine("Getting labels -> " + stopwatch.ElapsedMilliseconds);
-            stopwatch.Reset();
-
-            stopwatch.Start();
-
-            var beamSecLabel = structure.Labels.Create(IRobotLabelType.I_LT_BAR_SECTION, "I40B1");
-            var beamSection = beamSecLabel.Data;
-
-            beamSection.ShapeType = IRobotBarSectionShapeType.I_BSST_USER_I_BISYM;
-            var bar11 = structure.Bars.Get(11);
-            
-            var a = bar11.GetLabels();
-            var b = bar11.GetLabel(IRobotLabelType.I_LT_BAR_SECTION).Data;
-            var b2 = bar11.GetLabel(IRobotLabelType.I_LT_BAR_SECTION).Type;
-            var c = b.GetValue();
-
-            stopwatch.Stop();
-            Console.WriteLine("Getting labels -> " + stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Creating bar -> " + stopwatch.ElapsedMilliseconds);
             stopwatch.Reset();
 
 
@@ -134,7 +117,8 @@ namespace Robot_Evolution
             Console.WriteLine("SaveAs Time = " + stopwatch.ElapsedMilliseconds);
             stopwatch.Reset();
 
-            proj.Close();
+             proj.Close();
+
         }
     }
 }

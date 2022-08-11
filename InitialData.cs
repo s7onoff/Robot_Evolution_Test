@@ -11,15 +11,26 @@ namespace Robot_Evolution
         public static string OriginalFile = Path.Combine(WorkingDirectory, "Slab_Slice_00.rtd");
         #endregion SystemData
 
+        #region Sections
+        enum Sections
+        {
+            I40B,
+            I30B,
+            I50B,
+            I70B
+        }
 
-        public static List<Instance.Node> InitialNodes { get; set; }
+        #endregion
+
+
+        public static List<Node> InitialNodes { get; set; } = new List<Node>();
         public static Dictionary<BoundaryArc, (double R, int Node1, int Node2)> Arcs { get; set; } = 
             new Dictionary<BoundaryArc, (double R, int Node1, int Node2)> 
             { 
                 { BoundaryArc.Inner, (16.23, 7, 4) },
                 { BoundaryArc.Outer, (30.0, 14, 18) } 
             };
-        public static Dictionary<BoundaryArc, (double YMin, double YMax)> ArcsBoundaries { get; set; }
+        public static Dictionary<BoundaryArc, (double YMin, double YMax)> ArcsBoundaries { get; set; } = new Dictionary<BoundaryArc, (double YMin, double YMax)>();
         public static Dictionary<BoundaryLine, (int Node1, int Node2)> Lines { get; set; } =
             new Dictionary<BoundaryLine, (int Node1, int Node2)>
             {
@@ -34,8 +45,8 @@ namespace Robot_Evolution
                 {BoundaryLine.Fixed3R, (1, 21) },
                 {BoundaryLine.Free2R, (21, 18) }
             };
-        public static Dictionary<BoundaryLine, (double YMin, double YMax)> LinesBoundaries { get; set; }
-        public static Dictionary<BoundaryLine, (double k, double b)> LinesParameters { get; set; }
+        public static Dictionary<BoundaryLine, (double YMin, double YMax)> LinesBoundaries { get; set; } = new Dictionary<BoundaryLine, (double YMin, double YMax)>();
+        public static Dictionary<BoundaryLine, (double k, double b)> LinesParameters { get; set; } = new Dictionary<BoundaryLine, (double k, double b)>();
         public static List<int> NonMovableNodes { get; set; } = new List<int> { 1, 4, 7, 9, 12, 13, 14, 18, 19, 20, 21, 22 };
 
         public static List<Point2D> WorkingFieldBoundaryPoints { get; set; } = 

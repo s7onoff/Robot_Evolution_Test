@@ -9,17 +9,17 @@
 
         public class MoveNode : Mutation
         {
-            public MoveNode(Instance.Node node)
+            public MoveNode(Node node)
             {
 
             }
 
-            public MoveNode(Instance.Node node, double X)
+            public MoveNode(Node node, double X)
             {
 
             }
 
-            public MoveNode(Instance.Node node, double X, double Y)
+            public MoveNode(Node node, double X, double Y)
             {
 
             }
@@ -38,7 +38,7 @@
         }
         public class DeleteNode : Mutation
         {
-            public DeleteNode(Instance.Node node)
+            public DeleteNode(Node node)
             {
 
             }
@@ -46,7 +46,7 @@
 
         public class NewBeam : Mutation
         {
-            public NewBeam(Instance.Node node1, Instance.Node node2)
+            public NewBeam(Node node1, Node node2)
             {
 
             }
@@ -54,7 +54,7 @@
 
         public class DeleteBeam : Mutation
         {
-            public DeleteBeam(Instance.Beam beam)
+            public DeleteBeam(Beam beam)
             {
 
             }

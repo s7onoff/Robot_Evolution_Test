@@ -6,23 +6,41 @@ namespace Robot_Evolution
 {
     public static class RobotInitialMethods
     {
-        public static RobotOM.RobotApplication RobotApplication;
-        public static RobotProject Project;
-        public static RobotStructure RobotStructure;
+        public static RobotOM.RobotApplication RobotApplication = new RobotOM.RobotApplication();
+        public static RobotProject Project = RobotApplication.Project;
+        public static RobotStructure RobotStructure = Project.Structure;
 
-        static RobotInitialMethods()
+
+        public static void Start()
         {
-            RobotApplication = new RobotOM.RobotApplication();
-            Project = RobotApplication.Project;
-            RobotStructure = Project.Structure;
             Project.Open(InitialData.OriginalFile);
 
             CalcLines();
-            // TODO: Написать считывание всех узлов, приведение их к собственным классам, дописать класс нодов
-            // var allNodes = (List<int>)RobotStructure.Nodes.GetAll();
-            // InitialData.InitialNodes = CalcNodesCoords(allNodes);
+            ReadNodes();
 
+        }
+
+        public static void Finish()
+        {
             Project.Close();
+        }
+        
+        static void ReadNodes()
+        {
+            var allNodes = RobotStructure.Nodes.GetAll();
+
+            var listOfNodes = new List<IRobotNode>();
+            var listofNodeNumbers = new List<int>();
+
+            for (int i = 1; i < (allNodes.Count) + 1; i++)
+            {
+                var node = (IRobotNode)allNodes.Get(i);
+                if (!node.IsCalc)
+                {
+                    listOfNodes.Add(node);
+                    listofNodeNumbers.Add(node.Number);
+                }
+            }
         }
 
         static (double k, double b, double y1, double y2) CalcLineParameters(BoundaryLine line)
