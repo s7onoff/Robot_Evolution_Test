@@ -39,13 +39,14 @@ namespace Robot_Evolution
     {
         static void Main(string[] args)
         {
+            
             var stopwatch = new Stopwatch();
             var rnd = new Random();
 
             var robotApplication = new RobotOM.RobotApplication();
 
+            var structure = robotApplication.Project.Structure;
             var proj = robotApplication.Project;
-            var structure = proj.Structure;
 
             var dir = @"C:\Users\Sesemenov\Documents\!tmp\2022-08-11";
 
@@ -138,6 +139,9 @@ namespace Robot_Evolution
             stopwatch.Reset();
 
             proj.Close();
+
+            RobotInitialMethods.Start();
+            Console.ReadLine();
         }
     }
 }

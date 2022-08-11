@@ -30,13 +30,14 @@ namespace Robot_Evolution
 
         public void ReadFromRobot()
         {
-            foreach (int nodeNumber in InitialData.NonMovableNodes)
-            {
-                // this.NonMovableNodes.Add(new Node());
-            }
-            
+            RobotStructure robotStructure = new RobotStructure();
+            var allNodes = robotStructure.Nodes.GetAll();
         }
 
+        public void WriteToRobot()
+        {
+
+        }
     }
 
 
@@ -53,7 +54,7 @@ namespace Robot_Evolution
 
         public Node(double x, double y)
         {
-
+            X = x; Y = y;
         }
     }
 
@@ -63,11 +64,13 @@ namespace Robot_Evolution
         public bool Movable { get; set; }
         public Node Node1 { get; set; }
         public Node Node2 { get; set; }
-        //public Section Section { get; set; }
+        public Section Section { get; set; }
 
-        public Beam(Node node1, Node node2)
+        public Beam(Node node1, Node node2, Section section)
         {
-
+            Node1 = node1;
+            Node2 = node2;
+            Section = section;
         }
     }
 }
