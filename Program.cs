@@ -112,19 +112,22 @@ namespace Robot_Evolution
 
             stopwatch.Start();
 
-            var beamSecLabel = structure.Labels.Create(IRobotLabelType.I_LT_BAR_SECTION, "I40B1");
+            var beamSecLabel = structure.Labels.Create(IRobotLabelType.I_LT_BAR_SECTION, "I60B1");
             var beamSection = beamSecLabel.Data;
 
             beamSection.ShapeType = IRobotBarSectionShapeType.I_BSST_USER_I_BISYM;
             var bar11 = structure.Bars.Get(11);
-            
-            var a = bar11.GetLabels();
-            var b = bar11.GetLabel(IRobotLabelType.I_LT_BAR_SECTION).Data;
-            var b2 = bar11.GetLabel(IRobotLabelType.I_LT_BAR_SECTION).Type;
-            var c = b.GetValue();
+
+            var a = proj.Preferences.GetCurrentDatabase(IRobotDatabaseType.I_DT_SECTIONS);
+            proj.Preferences.SetCurrentDatabase(IRobotDatabaseType.I_DT_SECTIONS, "STO");
+            beamSection.LoadFromDBase("60ДБ1");
+            var labelServer = structure.Labels;
+            labelServer.Store(beamSecLabel);
+
+            bar11.SetLabel(IRobotLabelType.I_LT_BAR_SECTION, "I60B1");
 
             stopwatch.Stop();
-            Console.WriteLine("Getting labels -> " + stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Setting new section -> " + stopwatch.ElapsedMilliseconds);
             stopwatch.Reset();
 
 
