@@ -9,16 +9,18 @@ namespace Robot_Evolution
         public int id { get; set; }
         public int generationId { get; set; }
         public List<Node> Nodes { get; set; }
-        public List<Node> NonMovableNodes { get; set; }
-        public List<Node> MovableNodes { get; set; }
-        public List<IRobotBar> Bars { get; set; }
+        public List<Node> MutatedNodes { get; set; }
+        public List<Node> OriginalNodes { get; set; }
+        public List<Beam> Beams { get; set; }
+        public List<Beam> MutatedBeams { get; set; }
+        public List<Beam> OriginalBeams { get; set; }
 
         public class Genotype
         {
 
         }
 
-        public class StablePart
+        public class OriginalPart
         {
             // Считать сюда из InitialData все координаты узлов
         }
@@ -28,10 +30,17 @@ namespace Robot_Evolution
 
         }
 
-        public void ReadFromRobot()
+        public void ReadOriginalFromRobot()
         {
-            RobotStructure robotStructure = new RobotStructure();
-            var allNodes = robotStructure.Nodes.GetAll();
+            var nodesFromRobot = RobotInteraction.ReadNodes();
+            var nodeId = 1;
+            foreach (var nodeRobot in nodesFromRobot)
+            {
+                var node = new Node(nodeRobot.X, nodeRobot.Y);
+                node.Movable = false;
+                node.ID = nodeId;
+                OriginalNodes.Add(node);
+            }
         }
 
         public void WriteToRobot()

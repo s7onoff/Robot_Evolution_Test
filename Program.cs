@@ -140,7 +140,6 @@ namespace Robot_Evolution
 
             proj.Close();
 
-            RobotInitialMethods.Start();
             Console.ReadLine();
         }
     }
