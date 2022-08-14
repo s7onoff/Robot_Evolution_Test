@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using RobotOM;
+using static System.Net.WebRequestMethods;
 
 namespace Robot_Evolution
 {
@@ -10,13 +13,15 @@ namespace Robot_Evolution
         public static RobotProject Project = RobotApplication.Project;
         public static RobotStructure RobotStructure = Project.Structure;
 
+        static Random random = new Random();
         public static void Start()
         {
             Project.Open(InitialData.OriginalFile);
-
-            // CalcLines();
-            ReadNodes();
-            ReadBeams();
+            CreateSections();
+            Project.CalcEngine.AnalysisParams.IgnoreWarnings = true;
+            Project.Structure.ResultsFreeze = false;
+            Project.CalcEngine.AutoFreezeResults = false;
+            
         }
 
         public static void Finish()
@@ -24,9 +29,39 @@ namespace Robot_Evolution
             Project.Close();
         }
 
-        public static void CalcResult()
+        public static Result CalcResult()
         {
-            //TODO: Implement
+            var result = new Result();
+            if (Project.CalcEngine.Calculate() != 0)
+            {
+                result.Deflection = RobotStructure.Results.Nodes.Displacements.Value(InitialData.DeflectionMonitoringRobotId, 2).UZ;
+                result.Weight = RobotStructure.Results.Total.GetMass(1);
+            }
+            return result;
+        }
+
+        public static void SaveAs(Instance instance)
+        {
+            var filename = "_g_" + instance.generationId + "_i_" + instance.id + ".rtd";
+            var path = Path.Combine(InitialData.WorkingDirectory, filename);
+            Project.SaveAs(path);
+        }
+
+        public static void CreateSections()
+        {
+            foreach (var section in Sections.SectionsToUse)
+            {
+                var beamSecLabel = RobotStructure.Labels.Create(IRobotLabelType.I_LT_BAR_SECTION, section.Name);
+                var beamSection = beamSecLabel.Data;
+
+                beamSection.ShapeType = IRobotBarSectionShapeType.I_BSST_USER_I_BISYM;
+
+                Project.Preferences.SetCurrentDatabase(IRobotDatabaseType.I_DT_SECTIONS, "STO");
+
+                beamSection.LoadFromDBase(section.NameInRobotDB);
+                var labelServer = RobotStructure.Labels;
+                labelServer.Store(beamSecLabel);
+            }
         }
 
         #region MethodsToRead
@@ -73,110 +108,52 @@ namespace Robot_Evolution
 
         #region MethodsToWrite
 
-        public static void DeleteMutations()
+        public static void DeleteMutations(Instance instance)
         {
             var nodesSelector = RobotStructure.Selections.Create(IRobotObjectType.I_OT_NODE);
-            nodesSelector.AddText(""); //TODO:
+            string nodesRobotNumbers = "";
+            foreach (var node in instance.MutatedNodes)
+            {
+                nodesRobotNumbers += node.RobotID.ToString();
+                nodesRobotNumbers += " ";
+            }
+            nodesSelector.AddText(nodesRobotNumbers);
             RobotStructure.Nodes.DeleteMany(nodesSelector);
 
-            var barssSelector = RobotStructure.Selections.Create(IRobotObjectType.I_OT_BAR);
-            barssSelector.AddText(""); //TODO:           
+            var barsSelector = RobotStructure.Selections.Create(IRobotObjectType.I_OT_BAR);
+            string beamsRobotNumbers = "";
+            foreach (var beam in instance.MutatedBeams)
+            {
+                beamsRobotNumbers += beam.RobotID.ToString();
+                beamsRobotNumbers += " ";
+            }
+            barsSelector.AddText(beamsRobotNumbers);
             RobotStructure.Bars.DeleteMany(nodesSelector);
-
         }
 
         public static void AddMutations(Instance instance)
         {
             foreach (var node in instance.MutatedNodes)
             {
-                var n = RobotStructure.Nodes.FreeNumber;
+                // var n = RobotStructure.Nodes.FreeNumber;
+                int nn = random.Next(100, 200);
+                node.RobotID = nn;
                 var x = node.X;
                 var y = node.Y;
-                RobotStructure.Nodes.Create(n, x, y, 5000);
+                RobotStructure.Nodes.Create(nn, x, y, 5000.0);
             }
 
             foreach (var beam in instance.MutatedBeams)
             {
-                var n = RobotStructure.Nodes.FreeNumber;
-                var x = node.X;
-                var y = node.Y;
-                RobotStructure.Nodes.Create(n, x, y, 5000);
+                var n = RobotStructure.Bars.FreeNumber;
+                beam.RobotID = n;
+                RobotStructure.Bars.Create(n, beam.Node1.RobotID, beam.Node2.RobotID);
+                var bar = (IRobotBar)RobotStructure.Bars.Get(n);
+                bar.SetSection(beam.Section.Name, false);
             }
         }
 
         #endregion MethodsToWrite
 
-        //TODO: Убрать всё
-        #region OldMethods
-
-        // TODO: Переписать, мы все равно считываем все стержни методом ReadBeams
-        // Или вообще убрать отсюда, потому что потом внутренними структурами быстрее по каждой балке найти и посчитать всё
-        static (double k, double b, double y1, double y2) CalcLineParameters(BoundaryLine line)
-        {
-            var node1 = InitialData.Lines[line].Node1;
-            var node2 = InitialData.Lines[line].Node2;
-            var x1 = ((IRobotNode)RobotStructure.Nodes.Get(node1)).X;
-            var x2 = ((IRobotNode)RobotStructure.Nodes.Get(node2)).X;
-            var y1 = ((IRobotNode)RobotStructure.Nodes.Get(node1)).Y;
-            var y2 = ((IRobotNode)RobotStructure.Nodes.Get(node2)).Y;
-
-            var k = (x2 - x1) / (y2 - y1);
-            var b = x2 - (k * y2);
-
-            return (k, b, y1, y2);
-        }
-
-        // TODO: Переместить отсюда?
-        static (double node1Y, double node2Y) CalcRadiusBoundaries(BoundaryArc arc)
-        {
-            var node1 = InitialData.Arcs[arc].Node1;
-            var node2 = InitialData.Arcs[arc].Node2;
-            var y1 = ((IRobotNode)RobotStructure.Nodes.Get(node1)).Y;
-            var y2 = ((IRobotNode)RobotStructure.Nodes.Get(node2)).Y;
-
-            double[] ys = { y1, y2 };
-
-            var yMin = y1 < y2 ? y1 : y2;
-            var yMax = y1 > y2 ? y1 : y2;
-
-            return (yMin, yMax);
-        }
-
-        // TODO: Переместить отсюда?
-        static void CalcLines()
-        {
-            foreach (var line in InitialData.Lines.Keys)
-            {
-                var result = CalcLineParameters(line);
-                InitialData.LinesParameters.Add(line, (result.k, result.b));
-
-                var y1 = result.y1;
-                var y2 = result.y1;
-
-                var yMin = y1 < y2 ? y1 : y2;
-                var yMax = y1 > y2 ? y1 : y2;
-
-                InitialData.LinesBoundaries.Add(line, (yMin, yMax));
-            }
-
-            foreach (var arc in InitialData.Arcs.Keys)
-            {
-                InitialData.ArcsBoundaries.Add(arc, CalcRadiusBoundaries(arc));
-            }
-        }
-
-        // TODO: убрать, есть считывание всех узлов
-        static Dictionary<int, (double x, double y)> CalcNodesCoords(List<int> nodes)
-        {
-            var nodesCoordinates = new Dictionary<int, (double x, double y)>();
-            foreach (var node in nodes)
-            {
-                var x = ((IRobotNode)RobotStructure.Nodes.Get(node)).X;
-                var y = ((IRobotNode)RobotStructure.Nodes.Get(node)).Y;
-                nodesCoordinates.Add(node, (x, y));
-            }
-            return nodesCoordinates;
-        }
-        #endregion OldMethods
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 public static class Sections
 {
@@ -7,6 +8,20 @@ public static class Sections
     public static Section I60B = new Section("60B1", "60ДБ1");
     public static Section I70B = new Section("70B1", "70ДБ1");
 
+    public static List<Section> SectionsToUse = 
+        new List<Section>() { 
+            I20B,
+            I40B, 
+            I60B, 
+            I70B
+        };
+
+    internal static Section CreateSection(string sectionLabel)
+    {
+        var newSection = new Section(sectionLabel, sectionLabel);
+        SectionsToUse.Add(newSection);
+        return newSection;
+    }
 }
 
 public class Section
