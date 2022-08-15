@@ -80,7 +80,10 @@ namespace Robot_Evolution
         {
             RobotInteraction.AddMutations(this);
             this.Result = RobotInteraction.CalcResult();
-            RobotInteraction.SaveAs(this);
+            if (this.generationId % 10 == 0)
+            {
+                RobotInteraction.SaveAs(this);
+            }
             RobotInteraction.DeleteMutations(this);
             // TODO: serialize this
         }

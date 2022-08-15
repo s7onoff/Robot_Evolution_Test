@@ -68,24 +68,27 @@ namespace Robot_Evolution
 
                 Node node1; Node node2;
 
-                if (child.Nodes().Count() > node1OfDominantParent)
+                do
                 {
-                    node1 = child.Nodes()[node1OfDominantParent];
-                }
-                else
-                {
-                    node1 = MutationProcess.ChooseAnyNode(child);
-                }
+                    if (child.Nodes().Count() > node1OfDominantParent)
+                    {
+                        node1 = child.Nodes()[node1OfDominantParent];
+                    }
+                    else
+                    {
+                        node1 = MutationProcess.ChooseAnyNode(child);
+                    }
 
-                if (child.Nodes().Count() > node2OfDominantParent)
-                {
-                    node2 = child.Nodes()[node2OfDominantParent];
-                }
-                else
-                {
-                    node2 = MutationProcess.ChooseAnyNode(child);
-                }
+                    if (child.Nodes().Count() > node2OfDominantParent)
+                    {
+                        node2 = child.Nodes()[node2OfDominantParent];
+                    }
+                    else
+                    {
+                        node2 = MutationProcess.ChooseAnyNode(child);
+                    }
 
+                } while (!GeometryMethods.BeamInsideWF(node1, node2));
 
                 child.MutatedBeams.Add(new Beam(node1, node2, beamForChild.Section));
             }
