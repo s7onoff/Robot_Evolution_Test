@@ -13,7 +13,7 @@ namespace Robot_Evolution
     }
     public class Instance
     {
-
+        //TODO: Parents
         public int id { get; set; }
         public int generationId { get; set; }
 
@@ -31,7 +31,6 @@ namespace Robot_Evolution
         }
         public List<Node> MutatedNodes { get; set; }
         public List<Node> OriginalNodes { get; set; }
-        public List<Beam> Beams { get; set; }
         public List<Beam> MutatedBeams { get; set; }
         public List<Beam> OriginalBeams { get; set; }
         public Result Result { get; set; }
@@ -82,8 +81,8 @@ namespace Robot_Evolution
         {
             RobotInteraction.AddMutations(this);
             this.Result = RobotInteraction.CalcResult();
-            RobotInteraction.DeleteMutations(this);
             RobotInteraction.SaveAs(this);
+            RobotInteraction.DeleteMutations(this);
             // TODO: serialize this
         }
 
@@ -95,13 +94,13 @@ namespace Robot_Evolution
         public void MutateInitial()
         {
             var newNodeMutation = new MutationProcess.NewNodeMutation();
-            for (int _ = 0; _ < 5; _++)
+            for (int _ = 0; _ < EvolutionParameters.NewNodesInInitialGeneration; _++)
             {
                 newNodeMutation.Action(this);
             }
 
             var newBeamMutation = new MutationProcess.NewBeamMutation();
-            for (int _ = 0; _ < 2; _++)
+            for (int _ = 0; _ < EvolutionParameters.NewBeamsInInitialGeneration; _++)
             {
                 newBeamMutation.Action(this);
             }
@@ -114,10 +113,6 @@ namespace Robot_Evolution
     {
         public int ID { get; set; }
         public int RobotID { get; set; }
-        public bool Movable { get; set; }
-        public bool OnContourArc { get; set; }
-        public bool OnContourLine { get; set; }
-        public bool HasSupport { get; set; }
         public double X { get; set; }
         public double Y { get; set; }
 
@@ -131,7 +126,6 @@ namespace Robot_Evolution
     {
         public int ID { get; set; }
         public int RobotID { get; set; }
-        public bool Movable { get; set; }
         public Node Node1 { get; set; }
         public Node Node2 { get; set; }
         public Section Section { get; set; }

@@ -107,7 +107,7 @@ namespace Robot_Evolution
         #endregion MethodsToRead
 
         #region MethodsToWrite
-
+        // Кажется, не удаляет старые мутации
         public static void DeleteMutations(Instance instance)
         {
             var nodesSelector = RobotStructure.Selections.Create(IRobotObjectType.I_OT_NODE);
@@ -128,7 +128,7 @@ namespace Robot_Evolution
                 beamsRobotNumbers += " ";
             }
             barsSelector.AddText(beamsRobotNumbers);
-            RobotStructure.Bars.DeleteMany(nodesSelector);
+            RobotStructure.Bars.DeleteMany(barsSelector);
         }
 
         public static void AddMutations(Instance instance)

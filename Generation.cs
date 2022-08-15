@@ -7,11 +7,10 @@ namespace Robot_Evolution
 {
     public class Generation
     {
-        //TODO: чекнуть, что все методы, использующие рандомайзер, не вызываются по несколько раз
         public List<Instance> Instances { get; set; }
         public int id { get; set; }
         public int GenerationQuantity { get; set; } = EvolutionParameters.InstancesPerGeneration;
-        private Random RandomGenerator = new Random();
+        private readonly Random randomGenerator = new Random();
         public Generation()
         {
             this.id = GenerationsRegistrator.Counter;
@@ -66,7 +65,7 @@ namespace Robot_Evolution
             }
 
             // Making crossover for other instances using results of fitting function
-            for (int i = 0; i < GenerationQuantity- nonCrossedOverChildren.Count(); i++)
+            for (int i = 0; i < GenerationQuantity; i++)
             {
                 if (this.Instances.Exists(_ => _.id == i))
                 {
@@ -131,7 +130,14 @@ namespace Robot_Evolution
             var list = new List<int>();
             for (int i = 0; i < EvolutionParameters.GenerationNonCrossedOver; i++)
             {
-                list.Add(RandomGenerator.Next(EvolutionParameters.InstancesPerGeneration));
+                int randomNumber;
+                do
+                {
+                    randomNumber = randomGenerator.Next(0, EvolutionParameters.InstancesPerGeneration - 1);
+                }
+                while (list.Contains(randomNumber));
+
+                list.Add(randomNumber);
             }
             return list;
         }
@@ -148,8 +154,8 @@ namespace Robot_Evolution
                 currentProbabilityNumber += probabilities[i];
             }
 
-            var parent1prob = RandomGenerator.NextDouble() * sumProbabilities;
-            var parent2prob = RandomGenerator.NextDouble() * sumProbabilities;
+            var parent1prob = randomGenerator.NextDouble() * sumProbabilities;
+            var parent2prob = randomGenerator.NextDouble() * sumProbabilities;
 
             var parent1 = new Instance();
             var parent2 = new Instance();

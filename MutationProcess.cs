@@ -18,19 +18,24 @@ namespace Robot_Evolution
         {
             public override void Action(Instance instance)
             {
-                var node = ChooseMutatedNode(instance);
-                var amplitude = EvolutionParameters.NodeMovementPerMutation;
-                double xMove;
-                double yMove;
-                do
-                {
-                    xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude)) * 2;
-                    yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude)) * 2;
-                }
-                while (!GeometryMethods.NodeInsideWF(node.X + xMove, node.Y + yMove));
 
-                node.X += xMove;
-                node.Y += yMove;
+                // TODO: Check if connected beam are still in WF
+                var node = ChooseMutatedNode(instance);
+                if (node != null)
+                {
+                    var amplitude = EvolutionParameters.NodeMovementPerMutation;
+                    double xMove;
+                    double yMove;
+                    do
+                    {
+                        xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude)) * 2;
+                        yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude)) * 2;
+                    }
+                    while (!GeometryMethods.NodeInsideWF(node.X + xMove, node.Y + yMove));
+
+                    node.X += xMove;
+                    node.Y += yMove;
+                }
             }
         }
 
@@ -59,21 +64,33 @@ namespace Robot_Evolution
             public override void Action(Instance instance)
             {
                 var node = ChooseMutatedNode(instance);
-                instance.MutatedNodes.Remove(node);
+                if (node != null)
+                {
+                    instance.MutatedNodes.Remove(node);
+                }
             }
         }
 
         public class NewBeamMutation : Mutation
         {
-            //TODO: дописать проверку, что балка остается в пределах контура
-            //TODO: дописать проверку, что балка не совпадает с существующими
-            //TODO: дописать проверку, что балка не накладывается на существующие
+            //TODO: дописать проверку, что балка остается в пределах контура (done)
+            //TODO: дописать проверку, что балка не совпадает с существующими (done by previous)
+            //TODO: дописать проверку, что балка не накладывается на существующие (should be done automatically)
             public override void Action(Instance instance)
             {
-                var node1 = ChooseAnyNode(instance);
-                var node2 = ChooseAnyNode(instance);
+                Node node1;
+                Node node2;
+
+                do
+                {
+                    node1 = ChooseAnyNode(instance);
+                    node2 = ChooseAnyNode(instance);
+                } while (!GeometryMethods.BeamInsideWF(node1, node2));
+
                 var section = ChooseSection();
+
                 var beam = new Beam(node1, node2, section);
+
                 instance.MutatedBeams.Add(beam);
             }
         }
@@ -133,8 +150,15 @@ namespace Robot_Evolution
 
         public static Node ChooseMutatedNode(Instance instance)
         {
-            var nodeNumber = RandomGenerator.Next(1, instance.MutatedNodes.Count());
-            return instance.MutatedNodes[nodeNumber];
+            if (instance.MutatedNodes.Count() > 0)
+            {
+                var nodeNumber = RandomGenerator.Next(1, instance.MutatedNodes.Count());
+                return instance.MutatedNodes[nodeNumber];
+            }
+            else
+            {
+                return null;
+            }
         }
         public static Node ChooseAnyNode(Instance instance)
         {

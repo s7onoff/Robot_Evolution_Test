@@ -20,7 +20,7 @@ namespace Robot_Evolution
             var maximumNodes = parents.Max(x => x.MutatedNodes.Count);
 
             var nodesQuantity = RandomGenerator.Next(minimumNodes, maximumNodes);
-
+            // TOOD: перепродумать алгоритм. 
             for (int i = 0; i < nodesQuantity; i++)
             {
                 double x;
@@ -61,12 +61,30 @@ namespace Robot_Evolution
                     dominantParent = parentWithMoreBeams;
                 }
 
+
                 var beamForChild = dominantParent.MutatedBeams[i];
                 var node1OfDominantParent = dominantParent.Nodes().IndexOf(beamForChild.Node1);
                 var node2OfDominantParent = dominantParent.Nodes().IndexOf(beamForChild.Node2);
 
-                var node1 = child.Nodes()[node1OfDominantParent];
-                var node2 = child.Nodes()[node2OfDominantParent];
+                Node node1; Node node2;
+
+                if (child.Nodes().Count() > node1OfDominantParent)
+                {
+                    node1 = child.Nodes()[node1OfDominantParent];
+                }
+                else
+                {
+                    node1 = MutationProcess.ChooseAnyNode(child);
+                }
+
+                if (child.Nodes().Count() > node2OfDominantParent)
+                {
+                    node2 = child.Nodes()[node2OfDominantParent];
+                }
+                else
+                {
+                    node2 = MutationProcess.ChooseAnyNode(child);
+                }
 
 
                 child.MutatedBeams.Add(new Beam(node1, node2, beamForChild.Section));

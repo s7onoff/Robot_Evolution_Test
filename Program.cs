@@ -48,7 +48,7 @@ namespace Robot_Evolution
             initialGeneration.generateInitialGeneration();
 
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < EvolutionParameters.NumberOfGenerations; i++)
             {
                 var generation = new Generation();
                 generation.generateRegularGeneration();
@@ -57,6 +57,11 @@ namespace Robot_Evolution
             RobotInteraction.Finish();
 
             Console.ReadLine();
+
+            // TODO: Logging
+            // TODO: Serializing data
+            // TODO: Continuing calculations after
+
         }
     }
 }

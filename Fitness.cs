@@ -17,6 +17,11 @@ namespace Robot_Evolution
             var minimumWeight = generation.Instances.Min(_ => _.Result.Weight);
             foreach (var instance in generation.Instances)
             {
+                if (instance.Result.Deflection == 0)
+                {
+                    instance.Result.ProbabilityForNext = 0;
+                    continue;
+                }
                 var deflectionProbability = minimumDeflection / instance.Result.Deflection;
                 var weightProbability = minimumWeight / instance.Result.Weight + WeightCorrelationFactor;
                 instance.Result.ProbabilityForNext = weightProbability * deflectionProbability;
