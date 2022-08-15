@@ -152,7 +152,7 @@ namespace Robot_Evolution
         {
             if (instance.MutatedNodes.Count() > 0)
             {
-                var nodeNumber = RandomGenerator.Next(1, instance.MutatedNodes.Count());
+                var nodeNumber = RandomGenerator.Next(0, instance.MutatedNodes.Count()-1);
                 return instance.MutatedNodes[nodeNumber];
             }
             else

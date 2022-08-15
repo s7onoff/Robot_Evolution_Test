@@ -61,7 +61,7 @@ namespace Robot_Evolution
             // TODO: Logging
             // TODO: Serializing data
             // TODO: Continuing calculations after
-
+            // TODO: Graphics visualization
         }
     }
 }

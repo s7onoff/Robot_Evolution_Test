@@ -44,7 +44,6 @@ namespace Robot_Evolution
             foreach (var nodeRobot in nodesFromRobot)
             {
                 var node = new Node(nodeRobot.X, nodeRobot.Y);
-                node.Movable = false;
                 node.ID = nodeId;
                 node.RobotID = nodeRobot.Number;
                 OriginalNodes.Add(node);
