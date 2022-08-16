@@ -150,24 +150,30 @@ namespace Robot_Evolution
         {
             Logging.Logger.Info("Crossing over");
 
+            var possiblePredecessors = predecessors.Where(inst => inst.Result.Deflection * inst.Result.Weight != 0).ToList();
 
-            double[] probabilities = new double[(predecessors.Where(inst => inst.Result.Deflection * inst.Result.Weight != 0).ToList()).Count];       
+            double[] probabilities = new double[possiblePredecessors.Count];       
 
             var currentProbabilityNumber = 0.0;
             for (int i = 0; i < probabilities.Count(); i++)
             {
-                probabilities[i] = predecessors[i].Result.Probability + currentProbabilityNumber;
+                probabilities[i] = possiblePredecessors[i].Result.Probability + currentProbabilityNumber;
                 currentProbabilityNumber = probabilities[i];
             }
 
             Logging.Logger.Info("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
 
+            if (probabilities.Last() != 1)
+            {
+                Logging.Logger.Warn("Что-то тут с листом опять не работает, Сережа запарил, исправь уже время полночь");
+            }
+
             var random1 = randomGenerator.NextDouble();
             var random2 = randomGenerator.NextDouble();
 
-
-            var parent1 = predecessors.Where(inst => random1 <= inst.Result.Probability).First();
-            var parent2 = predecessors.Where(inst => random2 <= inst.Result.Probability).First();
+            
+            var parent1 = possiblePredecessors[Array.IndexOf(probabilities, probabilities.Where(number => random1 <= number).First())];
+            var parent2 = possiblePredecessors[Array.IndexOf(probabilities, probabilities.Where(number => random2 <= number).First())];
 
             Logging.Logger.Info("Random: {0}. Chosen: {1}", random1, parent1.id);
             Logging.Logger.Info("Random: {0}. Chosen: {1}", random2, parent2.id);
