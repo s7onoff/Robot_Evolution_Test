@@ -1,6 +1,4 @@
 ﻿using System;
-using MathNet.Spatial;
-using MathNet.Spatial.Euclidean;
 using System.Linq;
 using NetTopologySuite.Geometries;
 

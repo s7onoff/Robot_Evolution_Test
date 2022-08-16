@@ -80,7 +80,7 @@ namespace Robot_Evolution
         {
             RobotInteraction.AddMutations(this);
             this.Result = RobotInteraction.CalcResult();
-            if (this.generationId % 10 == 0)
+            if (this.generationId % EvolutionParameters.SaveEveryNGeneration == 0)
             {
                 RobotInteraction.SaveAs(this);
             }
@@ -144,6 +144,7 @@ namespace Robot_Evolution
     {
         public double Deflection { get; set; }
         public double Weight { get; set; }
-        public double ProbabilityForNext { get; set; }
+        public double Probability { get; set; }
+        public IRobotCalculationStatus RobotCalculationStatus { get; set; }
     }
 }

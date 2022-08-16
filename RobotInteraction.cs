@@ -32,11 +32,15 @@ namespace Robot_Evolution
         public static Result CalcResult()
         {
             var result = new Result();
-            if (Project.CalcEngine.Calculate() != 0)
+            var calculationStatus = Project.CalcEngine.CalculateEx(IRobotCalculationMode.I_CM_LOCAL);
+            result.RobotCalculationStatus = calculationStatus;
+
+            if (calculationStatus == IRobotCalculationStatus.I_CS_COMPLETED)
             {
                 result.Deflection = RobotStructure.Results.Nodes.Displacements.Value(InitialData.DeflectionMonitoringRobotId, 2).UZ;
                 result.Weight = RobotStructure.Results.Total.GetMass(1);
             }
+
             return result;
         }
 

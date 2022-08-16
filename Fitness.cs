@@ -13,18 +13,19 @@ namespace Robot_Evolution
         public static double WeightCorrelationFactor { get; set; } = 0.3;
         public static void RegisterResult(Generation generation)
         {
-            var minimumDeflection = generation.Instances.Min(_ => _.Result.Deflection);
-            var minimumWeight = generation.Instances.Min(_ => _.Result.Weight);
+            var sumPreProbabilities = generation.Instances.Where(inst => inst.Result.RobotCalculationStatus == RobotOM.IRobotCalculationStatus.I_CS_COMPLETED).Sum(inst => 1 / (Math.Abs(inst.Result.Deflection) * inst.Result.Weight));
+
+
             foreach (var instance in generation.Instances)
             {
-                if (instance.Result.Deflection == 0)
+                if (instance.Result.RobotCalculationStatus == RobotOM.IRobotCalculationStatus.I_CS_COMPLETED)
                 {
-                    instance.Result.ProbabilityForNext = 0;
-                    continue;
+                    instance.Result.Probability = 1 / (Math.Abs(instance.Result.Deflection) * instance.Result.Weight * sumPreProbabilities);
                 }
-                var deflectionProbability = minimumDeflection / instance.Result.Deflection;
-                var weightProbability = minimumWeight / instance.Result.Weight + WeightCorrelationFactor;
-                instance.Result.ProbabilityForNext = weightProbability * deflectionProbability;
+                else
+                {
+                    instance.Result.Probability = 0;
+                }
             }
         }
     }

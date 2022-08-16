@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MathNet.Spatial;
 using RobotOM;
 using System.Collections;
 using System;
@@ -40,6 +39,8 @@ namespace Robot_Evolution
         static void Main(string[] args)
         {
             InitialData.Start();
+            Logging.SetLoggingConfiguration();
+            Logging.Logger.Info("Evolution Started");
 
             var originalGeneration = new Generation();
             originalGeneration.generateOriginalGeneration();

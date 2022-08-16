@@ -1,5 +1,4 @@
-﻿using MathNet.Numerics.Distributions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -53,8 +52,9 @@ namespace Robot_Evolution
         {
             var previousGeneration = GenerationsRegistrator.Generations.Last();
             id = GenerationsRegistrator.Counter;
+
             // Non-crossed-over instances copied
-            var nonCrossedOverChildren = ChooseChildsNonCrossedOver();
+            var nonCrossedOverChildren = ChooseChildsNonCrossedOver(previousGeneration.Instances.Count());
             foreach (var i in nonCrossedOverChildren)
             {
                 var instance = Clone(previousGeneration.Instances[i]);
@@ -62,6 +62,7 @@ namespace Robot_Evolution
                 instance.Mutate();
                 instance.Execute();
                 this.Instances.Add(instance);
+                Logging.Logger.Info("New cloned instance: {0}", instance.id);
             }
 
             // Making crossover for other instances using results of fitting function
@@ -80,6 +81,7 @@ namespace Robot_Evolution
                     instance.Mutate();
                     instance.Execute();
                     this.Instances.Add(instance);
+                    Logging.Logger.Info("New crossed over instance: {0}", instance.id);
                 }
             }
 
@@ -125,7 +127,7 @@ namespace Robot_Evolution
             return newInstance;
         }
 
-        private List<int> ChooseChildsNonCrossedOver()
+        private List<int> ChooseChildsNonCrossedOver(int generationQuantity)
         {
             var list = new List<int>();
             for (int i = 0; i < EvolutionParameters.GenerationNonCrossedOver; i++)
@@ -133,50 +135,36 @@ namespace Robot_Evolution
                 int randomNumber;
                 do
                 {
-                    randomNumber = randomGenerator.Next(0, EvolutionParameters.InstancesPerGeneration - 1);
+                    randomNumber = randomGenerator.Next(0, generationQuantity);
                 }
                 while (list.Contains(randomNumber));
 
                 list.Add(randomNumber);
             }
+
+            Logging.Logger.Info("For non-crossover chosen: {}", String.Join(", ", list.ToArray()));
             return list;
         }
 
         private (Instance parent1, Instance parent2) ChooseParentsForCrossOver(List<Instance> predecessors)
         {
-            var sumProbabilities = predecessors.Sum(_ => _.Result.ProbabilityForNext);
-            double[] probabilities = new double[predecessors.Count];
+            Logging.Logger.Info("Crossing over");
+
+
+            double[] probabilities = new double[(predecessors.Where(inst => inst.Result.RobotCalculationStatus == RobotOM.IRobotCalculationStatus.I_CS_COMPLETED).ToList()).Count];       
 
             var currentProbabilityNumber = 0.0;
-            for (int i = 0; i < predecessors.Count; i++)
-            {
-                probabilities[i] = predecessors[i].Result.ProbabilityForNext;
-                currentProbabilityNumber += probabilities[i];
-            }
-
-            var parent1prob = randomGenerator.NextDouble() * sumProbabilities;
-            var parent2prob = randomGenerator.NextDouble() * sumProbabilities;
-
-            var parent1 = new Instance();
-            var parent2 = new Instance();
-
             for (int i = 0; i < probabilities.Count(); i++)
             {
-                if(probabilities[i] >= parent1prob)
-                {
-                    parent1 = predecessors[i];
-                    break;
-                }
+                probabilities[i] = predecessors[i].Result.Probability + currentProbabilityNumber;
+                currentProbabilityNumber = probabilities[i];
             }
 
-            for (int i = 0; i < probabilities.Count(); i++)
-            {
-                if (probabilities[i] >= parent2prob)
-                {
-                    parent2 = predecessors[i];
-                    break;
-                }
-            }
+
+            var parent1 = predecessors.Where(inst => randomGenerator.NextDouble() >= inst.Result.Probability).First();
+            var parent2 = predecessors.Where(inst => randomGenerator.NextDouble() >= inst.Result.Probability).First();
+
+            Logging.Logger.Info("Parents for crossover selected: {0}, {1}", parent1.id.ToString(), parent2.id.ToString());
 
             return (parent1, parent2);
         }
@@ -191,6 +179,17 @@ namespace Robot_Evolution
             Generations.Add(generation);
             Fitness.RegisterResult(generation);
             Counter++;
+            LogGeneration(generation);
+        }
+
+        public static void LogGeneration(Generation generation)
+        {
+            Logging.Logger.Info(" ");
+            Logging.Logger.Info("Generation {0}", generation.id.ToString());
+            Logging.Logger.Info("Number of instances: {0}", generation.Instances.Count());
+            Logging.Logger.Info("Deflections: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Deflection).ToArray()));
+            Logging.Logger.Info("Calculated: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.RobotCalculationStatus).ToArray()));
+            Logging.Logger.Info("Probabilities for next generation: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Probability).ToArray()));
         }
     }
 }

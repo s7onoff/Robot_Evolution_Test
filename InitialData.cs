@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using MathNet.Spatial.Euclidean;
 using NetTopologySuite.Geometries;
 
 namespace Robot_Evolution

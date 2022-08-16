@@ -11,16 +11,19 @@ namespace Robot_Evolution
 
         public static Instance Crosover(Instance parent1, Instance parent2)
         {
+            Logging.Logger.Info("Crossing over parents: {0}, {1}", parent1.id, parent2.id);
             var child = new Instance();
 
             var parents = new List<Instance>() { parent1, parent2};
 
             var parentWithMoreNodes = parents.OrderByDescending(x => x.MutatedNodes.Count).FirstOrDefault();
+            
             var minimumNodes = parents.Min(x => x.MutatedNodes.Count);
             var maximumNodes = parents.Max(x => x.MutatedNodes.Count);
 
             var nodesQuantity = RandomGenerator.Next(minimumNodes, maximumNodes);
-            // TOOD: перепродумать алгоритм. 
+
+
             for (int i = 0; i < nodesQuantity; i++)
             {
                 double x;
@@ -31,13 +34,15 @@ namespace Robot_Evolution
                 {
                     x = randomParent.MutatedNodes[i].X;
                     y = randomParent.MutatedNodes[i].Y;
+                    Logging.Logger.Info("From parent {0} added node {1},{2}", randomParent.id, x, y);
                 }
                 else
                 {
                     x = parentWithMoreNodes.MutatedNodes[i].X;
                     y = parentWithMoreNodes.MutatedNodes[i].Y;
+                    Logging.Logger.Info("From parent {0} added node {1},{2}", parentWithMoreNodes.id, x, y);
                 }
-
+                
                 child.MutatedNodes.Add(new Node(x, y));
             }
 
@@ -65,7 +70,7 @@ namespace Robot_Evolution
                 var beamForChild = dominantParent.MutatedBeams[i];
                 var node1OfDominantParent = dominantParent.Nodes().IndexOf(beamForChild.Node1);
                 var node2OfDominantParent = dominantParent.Nodes().IndexOf(beamForChild.Node2);
-
+                
                 Node node1; Node node2;
 
                 do
@@ -89,6 +94,8 @@ namespace Robot_Evolution
                     }
 
                 } while (!GeometryMethods.BeamInsideWF(node1, node2));
+
+                Logging.Logger.Info("From parent {0} added beam ({1},{2}) , ({3}, {4})", dominantParent.id, node1.X, node1.Y, node2.X, node2.Y);
 
                 child.MutatedBeams.Add(new Beam(node1, node2, beamForChild.Section));
             }
