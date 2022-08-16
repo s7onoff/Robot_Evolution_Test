@@ -151,7 +151,7 @@ namespace Robot_Evolution
             Logging.Logger.Info("Crossing over");
 
 
-            double[] probabilities = new double[(predecessors.Where(inst => inst.Result.RobotCalculationStatus == RobotOM.IRobotCalculationStatus.I_CS_COMPLETED).ToList()).Count];       
+            double[] probabilities = new double[(predecessors.Where(inst => inst.Result.Deflection * inst.Result.Weight != 0).ToList()).Count];       
 
             var currentProbabilityNumber = 0.0;
             for (int i = 0; i < probabilities.Count(); i++)
@@ -184,10 +184,10 @@ namespace Robot_Evolution
 
         public static void LogGeneration(Generation generation)
         {
-            Logging.Logger.Info(" ");
             Logging.Logger.Info("Generation {0}", generation.id.ToString());
             Logging.Logger.Info("Number of instances: {0}", generation.Instances.Count());
             Logging.Logger.Info("Deflections: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Deflection).ToArray()));
+            Logging.Logger.Info("Weights: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Weight).ToArray()));
             Logging.Logger.Info("Calculated: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.RobotCalculationStatus).ToArray()));
             Logging.Logger.Info("Probabilities for next generation: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Probability).ToArray()));
         }
