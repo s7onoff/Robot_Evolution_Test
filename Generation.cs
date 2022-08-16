@@ -160,11 +160,17 @@ namespace Robot_Evolution
                 currentProbabilityNumber = probabilities[i];
             }
 
+            Logging.Logger.Info("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
 
-            var parent1 = predecessors.Where(inst => randomGenerator.NextDouble() >= inst.Result.Probability).First();
-            var parent2 = predecessors.Where(inst => randomGenerator.NextDouble() >= inst.Result.Probability).First();
+            var random1 = randomGenerator.NextDouble();
+            var random2 = randomGenerator.NextDouble();
 
-            Logging.Logger.Info("Parents for crossover selected: {0}, {1}", parent1.id.ToString(), parent2.id.ToString());
+
+            var parent1 = predecessors.Where(inst => random1 <= inst.Result.Probability).First();
+            var parent2 = predecessors.Where(inst => random2 <= inst.Result.Probability).First();
+
+            Logging.Logger.Info("Random: {0}. Chosen: {1}", random1, parent1.id);
+            Logging.Logger.Info("Random: {0}. Chosen: {1}", random2, parent2.id);
 
             return (parent1, parent2);
         }
