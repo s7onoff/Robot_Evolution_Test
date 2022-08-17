@@ -39,29 +39,6 @@ namespace Robot_Evolution
         public static Dictionary<BoundaryLine, (double YMin, double YMax)> LinesBoundaries { get; set; } = new Dictionary<BoundaryLine, (double YMin, double YMax)>();
         public static Dictionary<BoundaryLine, (double k, double b)> LinesParameters { get; set; } = new Dictionary<BoundaryLine, (double k, double b)>();
 
-        //public static List<Point2D> WorkingFieldBoundaryPoints { get; set; } = 
-        //    new List<Point2D> {
-        //        new Point2D(-24.46922, -10.13547),
-        //        new Point2D(-27.71642, -11.48050),
-        //        new Point2D(-29.42360, -5.85271),
-        //        new Point2D(-30.00004, -0.00000),
-        //        new Point2D(-29.42360, 5.85271),
-        //        new Point2D(-27.71642, 11.48050),
-        //        new Point2D(-24.48285, 10.14111),
-        //        new Point2D(-24.96120, 8.98626),
-        //        new Point2D(-20.34180, 7.07284),
-        //        new Point2D(-19.86345, 8.22769),
-        //        new Point2D(-14.98998, 6.20904),
-        //        new Point2D(-15.91328, 3.16534),
-        //        new Point2D(-16.22504, -0.00000),
-        //        new Point2D(-15.91328, -3.16534),
-        //        new Point2D(-14.98998, -6.20904),
-        //        new Point2D(-19.86345, -8.22770),
-        //        new Point2D(-20.34180, -7.07285),
-        //        new Point2D(-24.93395, -8.97497)
-        //    };
-        //public static Polygon2D WorkingField { get; set; } = new Polygon2D(WorkingFieldBoundaryPoints);
-
         public static Coordinate[] WorkingFieldBoundaryPoints { get; set; } = new Coordinate[] {
                 new Coordinate(-24.46922, -10.13547),
                 new Coordinate(-27.71642, -11.48050),

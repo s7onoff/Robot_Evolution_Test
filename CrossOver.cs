@@ -1,106 +1,52 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
-using System.Diagnostics;
+using NetTopologySuite.Geometries;
 
 namespace Robot_Evolution
 {
     public static class CrossOver
     {
-        private static Random RandomGenerator = new Random();
+        private static readonly Random randomGenerator = new Random();
 
         public static Instance Crosover(Instance parent1, Instance parent2)
         {
-            Logging.Logger.Info("Crossing over parents: {0}, {1}", parent1.id, parent2.id);
+            Logging.Logger.Debug("Crossing over parents: {0}, {1}", parent1.ID, parent2.ID);
             var child = new Instance();
 
-            var parents = new List<Instance>() { parent1, parent2};
+            var parents = new List<Instance>() { parent1, parent2 };
 
-            var parentWithMoreNodes = parents.OrderByDescending(x => x.MutatedNodes.Count).FirstOrDefault();
-            
-            var minimumNodes = parents.Min(x => x.MutatedNodes.Count);
-            var maximumNodes = parents.Max(x => x.MutatedNodes.Count);
+            var allTheBeams = parent1.MutatedBeams.Concat(parent2.MutatedBeams).ToList();
 
-            var nodesQuantity = RandomGenerator.Next(minimumNodes, maximumNodes);
+            var averageBeams = parents.Average(x => x.MutatedBeams.Count);
+            var averageNodes = parents.Average(x => x.MutatedNodes.Count);
 
-
-            for (int i = 0; i < nodesQuantity; i++)
+            for (int i = 0; i < averageBeams; i++)
             {
-                double x;
-                double y;
-                var randomParent = RandomGenerator.Next(0, 1) == 0 ? parent1 : parent2;
+                var newBeamFrom = allTheBeams[randomGenerator.Next(0, allTheBeams.Count())];
 
-                if (randomParent.MutatedNodes.Count > i)
+                var beamsAsSegments = child.MutatedBeams.Select(b => LineFromBeam(b));
+                var newBeamAsSegment = new LineSegment(newBeamFrom.Node1.X, newBeamFrom.Node1.Y, newBeamFrom.Node2.X, newBeamFrom.Node2.Y);
+
+                if (!beamsAsSegments.Where(b => b.Equals(newBeamAsSegment)).Any())
                 {
-                    x = randomParent.MutatedNodes[i].X;
-                    y = randomParent.MutatedNodes[i].Y;
-                    Logging.Logger.Info("From parent {0} added node {1},{2}", randomParent.id, x, y);
+                    var node1 = new Node(newBeamFrom.Node1.X, newBeamFrom.Node1.Y, child.FreeNodeID);
+                    var node2 = new Node(newBeamFrom.Node2.X, newBeamFrom.Node2.Y, child.FreeNodeID);
+                    var beam = new Beam(node1, node2, newBeamFrom.Section, child.FreeBeamID);
+
+
+                    child.MutatedNodes.Add(node1);
+                    child.MutatedNodes.Add(node2);
+                    child.MutatedBeams.Add(beam);
                 }
-                else
-                {
-                    x = parentWithMoreNodes.MutatedNodes[i].X;
-                    y = parentWithMoreNodes.MutatedNodes[i].Y;
-                    Logging.Logger.Info("From parent {0} added node {1},{2}", parentWithMoreNodes.id, x, y);
-                }
-                
-                child.MutatedNodes.Add(new Node(x, y));
-            }
-
-            var parentWithMoreBeams = parents.OrderByDescending(x => x.MutatedBeams.Count).FirstOrDefault();
-            var minimumBeams = parents.Min(x => x.MutatedBeams.Count);
-            var maximumBeams = parents.Max(x => x.MutatedBeams.Count);
-
-            var beamsQuantity = RandomGenerator.Next(minimumBeams, maximumBeams);
-
-            for (int i = 0; i < beamsQuantity; i++)
-            {
-                var randomParent = RandomGenerator.Next(0, 1) == 0 ? parent1 : parent2;
-                Instance dominantParent;
-
-                if (randomParent.MutatedBeams.Count > i)
-                {
-                    dominantParent = randomParent;
-                }
-                else
-                {
-                    dominantParent = parentWithMoreBeams;
-                }
-
-
-                var beamForChild = dominantParent.MutatedBeams[i];
-                var node1OfDominantParent = dominantParent.Nodes().IndexOf(beamForChild.Node1);
-                var node2OfDominantParent = dominantParent.Nodes().IndexOf(beamForChild.Node2);
-                
-                Node node1; Node node2;
-
-                do
-                {
-                    if (child.Nodes().Count() > node1OfDominantParent)
-                    {
-                        node1 = child.Nodes()[node1OfDominantParent];
-                    }
-                    else
-                    {
-                        node1 = MutationProcess.ChooseAnyNode(child);
-                    }
-
-                    if (child.Nodes().Count() > node2OfDominantParent)
-                    {
-                        node2 = child.Nodes()[node2OfDominantParent];
-                    }
-                    else
-                    {
-                        node2 = MutationProcess.ChooseAnyNode(child);
-                    }
-
-                } while (!GeometryMethods.BeamInsideWF(node1, node2));
-
-                Logging.Logger.Info("From parent {0} added beam ({1},{2}) , ({3}, {4})", dominantParent.id, node1.X, node1.Y, node2.X, node2.Y);
-
-                child.MutatedBeams.Add(new Beam(node1, node2, beamForChild.Section));
             }
 
             return child;
+        }
+
+        private static LineSegment LineFromBeam(Beam beam)
+        {            
+            return new LineSegment(beam.Node1.X, beam.Node1.Y, beam.Node2.X, beam.Node2.Y);
         }
     }
 }

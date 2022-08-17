@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Diagnostics;
+
 
 namespace Robot_Evolution
 {
@@ -18,20 +20,33 @@ namespace Robot_Evolution
         {
             public override void Action(Instance instance)
             {
-
-                // TODO: Check if connected beam are still in WF
                 var node = ChooseMutatedNode(instance);
                 if (node != null)
                 {
                     var amplitude = EvolutionParameters.NodeMovementPerMutation;
                     double xMove;
                     double yMove;
+                    bool check;
                     do
                     {
-                        xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude)) * 2;
-                        yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude)) * 2;
+                        xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude));
+                        yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude));
+
+                        check = GeometryMethods.NodeInsideWF(node.X + xMove, node.Y + yMove);
+                        foreach (var beam in node.ConnectedBeams(instance))
+                        {
+                            if (beam.node == 1)
+                            {
+                                check = check || GeometryMethods.BeamInsideWF(node.X + xMove, node.Y + yMove, beam.beam.Node2.X, beam.beam.Node2.Y);
+                            }
+
+                            else
+                            {
+                                check = check || GeometryMethods.BeamInsideWF(beam.beam.Node1.X, beam.beam.Node1.Y, node.X + xMove, node.Y + yMove);
+                            }
+                        }
                     }
-                    while (!GeometryMethods.NodeInsideWF(node.X + xMove, node.Y + yMove));
+                    while (!check);
 
                     node.X += xMove;
                     node.Y += yMove;
@@ -54,7 +69,28 @@ namespace Robot_Evolution
                 }
                 while (!GeometryMethods.NodeInsideWF(x, y));
 
-                var node = new Node(x, y);
+                var node = new Node(x, y, instance.FreeNodeID);
+                instance.MutatedNodes.Add(node);
+            }
+        }
+
+        public class NewNodeOnContourMutation : Mutation
+        {
+            public override void Action(Instance instance)
+            {
+                // Choosing random line on a ring
+                var chosenNumber = RandomGenerator.Next(InitialData.WorkingField.ExteriorRing.NumPoints);
+
+                var firstPoint = InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber).Coordinate;
+                var secondPoint = InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber + 1).Coordinate;
+
+                // Segment of the ring
+                var line = new NetTopologySuite.Geometries.LineSegment(firstPoint, secondPoint);
+
+                // A point on segment
+                var randomPointOnTheLine = line.PointAlong(RandomGenerator.NextDouble());
+                var node = new Node(randomPointOnTheLine.X, randomPointOnTheLine.Y, instance.FreeNodeID);
+
                 instance.MutatedNodes.Add(node);
             }
         }
@@ -68,14 +104,17 @@ namespace Robot_Evolution
                 {
                     instance.MutatedNodes.Remove(node);
                 }
+
+                var beams = node.ConnectedBeams(instance);
+                foreach (var beam in beams)
+                {
+                    instance.MutatedBeams.Remove(beam.beam);
+                }
             }
         }
 
         public class NewBeamMutation : Mutation
         {
-            //TODO: дописать проверку, что балка остается в пределах контура (done)
-            //TODO: дописать проверку, что балка не совпадает с существующими (done by previous)
-            //TODO: дописать проверку, что балка не накладывается на существующие (should be done automatically)
             public override void Action(Instance instance)
             {
                 Node node1;
@@ -89,7 +128,7 @@ namespace Robot_Evolution
 
                 var section = ChooseSection();
 
-                var beam = new Beam(node1, node2, section);
+                var beam = new Beam(node1, node2, section, instance.FreeBeamID);
 
                 instance.MutatedBeams.Add(beam);
             }
@@ -104,18 +143,33 @@ namespace Robot_Evolution
             }
         }
 
+        public class ChangeBeamSectionMutation : Mutation
+        {
+            public override void Action(Instance instance)
+            {
+                var beam = ChooseBeam(instance);
+                var section = ChooseSection();
+                beam.Section = section;
+            }
+        }
+
+
         public static List<Mutation> regularMutations = new List<Mutation>()
         {
             new MoveNodeMutation(){ Probability = EvolutionParameters.MoveNodeProbability},
-            new NewNodeMutation(){Probability = EvolutionParameters.NodeAddDeleteProbability},
-            new DeleteNodeMutation(){Probability = EvolutionParameters.NodeAddDeleteProbability},
+            new NewNodeMutation(){Probability = EvolutionParameters.NewNodeInsideProbability},
+            new NewNodeOnContourMutation() {Probability = EvolutionParameters.NewNodeOnContourProbability},
+            new DeleteNodeMutation(){Probability = EvolutionParameters.NodeDeleteProbability},
             new NewBeamMutation() { Probability = EvolutionParameters.BeamAddDeleteProbability},
-            new DeleteBeamMutation() { Probability = EvolutionParameters.BeamAddDeleteProbability}
+            new DeleteBeamMutation() { Probability = EvolutionParameters.BeamAddDeleteProbability},
+            new ChangeBeamSectionMutation() {Probability = EvolutionParameters.BeamChangeSectionProbability}
         };
 
         public static void Mutate(Instance instance)
         {
             var mutation = ChooseMutation(regularMutations);
+            Logging.Logger.Debug("Mutation chosen: {0} for instance {1}", mutation == null? "Nothing" : mutation.ToString(), instance.ID.ToString());
+
             if (mutation != null)
             {
                 mutation.Action(instance);
@@ -132,25 +186,18 @@ namespace Robot_Evolution
 
             // Boundaries are to choose mutation with preset probabilities 
             // whole probability to mutate is equal to sum of all mutations probabilities
-            var boundaries = new List<double>() { 0.0 };
+            var currentProbability = 0.0;
             foreach (Mutation mutation in mutations)
             {
-                double boundary = mutation.Probability;
-                if (randomResult < boundary)
-                {
-                    return mutation;
-                }
-                else
-                {
-                    boundaries.Add((boundaries.Last() + boundary));
-                }
+                currentProbability += mutation.Probability;
+                if (randomResult <= currentProbability) return mutation;
             }
             return null;
         }
 
         public static Node ChooseMutatedNode(Instance instance)
         {
-            if (instance.MutatedNodes.Count() > 0)
+            if (instance.MutatedNodes?.Count() > 0)
             {
                 var nodeNumber = RandomGenerator.Next(0, instance.MutatedNodes.Count()-1);
                 return instance.MutatedNodes[nodeNumber];

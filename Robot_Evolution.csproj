@@ -77,6 +77,7 @@
     <Compile Include="EvolutionParameters.cs" />
     <Compile Include="Fitness.cs" />
     <Compile Include="Generation.cs" />
+    <Compile Include="GenerationsRegistrator.cs" />
     <Compile Include="GeometryMethods.cs" />
     <Compile Include="InitialData.cs" />
     <Compile Include="Instance.cs" />

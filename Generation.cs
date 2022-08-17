@@ -7,20 +7,21 @@ namespace Robot_Evolution
     public class Generation
     {
         public List<Instance> Instances { get; set; }
-        public int id { get; set; }
+        public int ID { get; set; }
         public int GenerationQuantity { get; set; } = EvolutionParameters.InstancesPerGeneration;
+
         private readonly Random randomGenerator = new Random();
         public Generation()
         {
-            this.id = GenerationsRegistrator.Counter;
+            this.ID = GenerationsRegistrator.Counter;
             this.Instances = new List<Instance>();
         }
 
-        public void generateOriginalGeneration()
+        public void GenerateOriginalGeneration()
         {
-            id = 0;
+            ID = 0;
             var originalInstance = new Instance()
-            { id = 0, generationId = 0 };
+            { ID = 0, GenerationID = 0 };
             originalInstance.ReadOriginalFromRobot();
 
             Instances.Add(originalInstance);
@@ -29,15 +30,15 @@ namespace Robot_Evolution
         }
 
         
-        public void generateInitialGeneration()
+        public void GenerateInitialGeneration()
         {
-            id = 1;
+            ID = 1;
             for (int i = 0; i < GenerationQuantity; i++)
             {
                 var instance = new Instance
                 {
-                    id = i,
-                    generationId = this.id
+                    ID = i,
+                    GenerationID = this.ID
                 };
                 instance.MutateInitial();
                 instance.Execute();
@@ -48,27 +49,30 @@ namespace Robot_Evolution
         }
 
 
-        public void generateRegularGeneration()
+        public void GenerateRegularGeneration()
         {
             var previousGeneration = GenerationsRegistrator.Generations.Last();
-            id = GenerationsRegistrator.Counter;
+            ID = GenerationsRegistrator.Counter;
 
             // Non-crossed-over instances copied
             var nonCrossedOverChildren = ChooseChildsNonCrossedOver(previousGeneration.Instances.Count());
+
+            Logging.Logger.Debug("Generation: {0}. For non-crossover chosen: {1}", previousGeneration.ID, String.Join(", ", nonCrossedOverChildren));
+
             foreach (var i in nonCrossedOverChildren)
             {
                 var instance = Clone(previousGeneration.Instances[i]);
-                instance.generationId = this.id;
+                instance.GenerationID = this.ID;
+                Logging.Logger.Debug("New cloned instance: {0}", instance.ID);
                 instance.Mutate();
                 instance.Execute();
                 this.Instances.Add(instance);
-                Logging.Logger.Info("New cloned instance: {0}", instance.id);
             }
 
             // Making crossover for other instances using results of fitting function
             for (int i = 0; i < GenerationQuantity; i++)
             {
-                if (this.Instances.Exists(_ => _.id == i))
+                if (this.Instances.Exists(_ => _.ID == i))
                 {
                     continue;
                 }
@@ -76,56 +80,71 @@ namespace Robot_Evolution
                 {
                     var parentsForCrossOver = ChooseParentsForCrossOver(previousGeneration.Instances);
                     var instance = CrossOver.Crosover(parentsForCrossOver.parent1, parentsForCrossOver.parent2);
-                    instance.id = i;
-                    instance.generationId = this.id;
+                    instance.ID = i;
+                    instance.GenerationID = this.ID;
                     instance.Mutate();
                     instance.Execute();
                     this.Instances.Add(instance);
-                    Logging.Logger.Info("New crossed over instance: {0}", instance.id);
+                    Logging.Logger.Debug("New crossed over instance: {0}", instance.ID);
                 }
             }
 
             GenerationsRegistrator.Register(this);
         }
 
-        private Node Clone(Node oldNode)
+
+
+        private Node Clone(Node oldNode, int id)
         {
-            var newNode = new Node(oldNode.X, oldNode.Y);
+            var newNode = new Node(oldNode.X, oldNode.Y, id);
 
             return newNode;
         }
 
+
         private Beam Clone(Beam oldBeam, Instance oldInstance, Instance newInstance)
         {
-            var node1OfDominantParent = oldInstance.Nodes().IndexOf(oldBeam.Node1);
-            var node2OfDominantParent = oldInstance.Nodes().IndexOf(oldBeam.Node2);
+            // works only if previously all the nodes was cloned
+            
 
-            var node1 = newInstance.Nodes()[node1OfDominantParent];
-            var node2 = newInstance.Nodes()[node2OfDominantParent];
+            // var node1OfOld = oldInstance.Nodes().Where(n => n.ID == oldBeam.Node1.ID).Select(n => n.ID).First();
+            // var node2OfOld = oldInstance.Nodes().Where(n => n.ID == oldBeam.Node2.ID).Select(n => n.ID).First();
 
-            var newBeam = new Beam(node1, node2, oldBeam.Section);
+            Logging.Logger.Debug("Nodes of old instance: {0}, {1}", oldBeam.Node1.ID, oldBeam.Node2.ID);
+
+            var node1 = newInstance.Nodes().Where(n => n.ID == oldBeam.Node1.ID).First();
+            var node2 = newInstance.Nodes().Where(n => n.ID == oldBeam.Node2.ID).First();
+
+            Logging.Logger.Debug("Nodes of new instance: {0}, {1}", node1.ID, node2.ID);
+
+            var newBeam = new Beam(node1, node2, oldBeam.Section, newInstance.FreeBeamID);
             return newBeam;
         }
+
+
         private Instance Clone(Instance oldInstance)
         {
             var newInstance = new Instance()
             {
-                id = oldInstance.id,
-                generationId = this.id
+                ID = oldInstance.ID,
+                GenerationID = this.ID
             };
 
             foreach (var node in oldInstance.MutatedNodes)
             {
-                newInstance.MutatedNodes.Add(Clone(node));
+                newInstance.MutatedNodes.Add(Clone(node, node.ID));
+                Logging.Logger.Debug("Cloning node {0} from instance {1}_{2} to instance {3}_{4}", node.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
             }
 
             foreach (var beam in oldInstance.MutatedBeams)
             {
                 newInstance.MutatedBeams.Add(Clone(beam, oldInstance, newInstance));
+                Logging.Logger.Debug("Cloning beam {0} from instance {1}_{2} to instance {3}_{4}", beam.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
             }
 
             return newInstance;
         }
+
 
         private List<int> ChooseChildsNonCrossedOver(int generationQuantity)
         {
@@ -142,14 +161,14 @@ namespace Robot_Evolution
                 list.Add(randomNumber);
             }
 
-            Logging.Logger.Info("For non-crossover chosen: {}", String.Join(", ", list.ToArray()));
+            
+
             return list;
         }
 
+
         private (Instance parent1, Instance parent2) ChooseParentsForCrossOver(List<Instance> predecessors)
         {
-            Logging.Logger.Info("Crossing over");
-
             var possiblePredecessors = predecessors.Where(inst => inst.Result.Deflection * inst.Result.Weight != 0).ToList();
 
             double[] probabilities = new double[possiblePredecessors.Count];       
@@ -161,47 +180,23 @@ namespace Robot_Evolution
                 currentProbabilityNumber = probabilities[i];
             }
 
-            Logging.Logger.Info("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
+            // Logging.Logger.Debug("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
 
-            if (probabilities.Last() != 1)
+            //if (probabilities.Last() < 1)
             {
-                Logging.Logger.Warn("Что-то тут с листом опять не работает, Сережа запарил, исправь уже время полночь");
+                // Logging.Logger.Debug("probabilities.Last() < 1");
             }
 
             var random1 = randomGenerator.NextDouble();
             var random2 = randomGenerator.NextDouble();
 
-            
             var parent1 = possiblePredecessors[Array.IndexOf(probabilities, probabilities.Where(number => random1 <= number).First())];
             var parent2 = possiblePredecessors[Array.IndexOf(probabilities, probabilities.Where(number => random2 <= number).First())];
 
-            Logging.Logger.Info("Random: {0}. Chosen: {1}", random1, parent1.id);
-            Logging.Logger.Info("Random: {0}. Chosen: {1}", random2, parent2.id);
+            // Logging.Logger.Debug("Random: {0}. Chosen: {1}", random1, parent1.ID);
+            // Logging.Logger.Debug("Random: {0}. Chosen: {1}", random2, parent2.ID);
 
             return (parent1, parent2);
-        }
-    }
-    public static class GenerationsRegistrator
-    {
-        public static int Counter { get; set; } = 0;
-        public static List<Generation> Generations { get; set; } = new List<Generation>();
-
-        public static void Register(Generation generation)
-        {
-            Generations.Add(generation);
-            Fitness.RegisterResult(generation);
-            Counter++;
-            LogGeneration(generation);
-        }
-
-        public static void LogGeneration(Generation generation)
-        {
-            Logging.Logger.Info("Generation {0}", generation.id.ToString());
-            Logging.Logger.Info("Number of instances: {0}", generation.Instances.Count());
-            Logging.Logger.Info("Deflections: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Deflection).ToArray()));
-            Logging.Logger.Info("Weights: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Weight).ToArray()));
-            Logging.Logger.Info("Calculated: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.RobotCalculationStatus).ToArray()));
-            Logging.Logger.Info("Probabilities for next generation: {0}", String.Join(", ", generation.Instances.Select(ins => ins.Result.Probability).ToArray()));
         }
     }
 }

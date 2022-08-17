@@ -6,46 +6,10 @@ namespace Robot_Evolution
 {
     public static class GeometryMethods
     {
-        public static double? XofNodeOnArc(double y, BoundaryArc arc)
-        {
-            var r = InitialData.Arcs[arc].R;
-            var yMin = InitialData.ArcsBoundaries[arc].YMin;
-            var yMax = InitialData.ArcsBoundaries[arc].YMax;
-            var node1 = InitialData.Arcs[arc].Node1;
-            var node2 = InitialData.Arcs[arc].Node2;
-
-            if (y > yMin && y < yMax)
-            {
-                return Math.Sqrt(r * r - y * y);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static double? XofNodeOnLine(double y, BoundaryLine line)
-        {
-            var k = InitialData.LinesParameters[line].k;
-            var b = InitialData.LinesParameters[line].b;
-            var yMin = InitialData.LinesBoundaries[line].YMin;
-            var yMax = InitialData.LinesBoundaries[line].YMax;
-
-            if (y > yMin && y < yMax)
-            {
-                return k * y + b;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        
         public static bool NodeInsideWF(double x, double y)
         {
             var point = new Point(x, y);
             return InitialData.WorkingField.Contains(point);
-            //return InitialData.WorkingField.EnclosesPoint(new Point2D(x, y));
         }
 
         public static bool BeamInsideWF(Node node1, Node node2)
@@ -54,7 +18,13 @@ namespace Robot_Evolution
             var point2 = new Coordinate(node2.X, node2.Y);
             var lineSegment = new LineString(new Coordinate[] {point1, point2} );
             return InitialData.WorkingField.Contains(lineSegment);
-            //return InitialData.WorkingField.EnclosesPoint(new Point2D(x, y));
+        }
+        public static bool BeamInsideWF(double x1, double y1, double x2, double y2)
+        {
+            var point1 = new Coordinate(x1, y1);
+            var point2 = new Coordinate(x2, y2);
+            var lineSegment = new LineString(new Coordinate[] { point1, point2 });
+            return InitialData.WorkingField.Contains(lineSegment);
         }
 
         public static (double maxX, double maxY, double minX, double minY) WorkingFieldboundaries(Polygon polygon)

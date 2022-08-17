@@ -43,16 +43,16 @@ namespace Robot_Evolution
             Logging.Logger.Info("Evolution Started");
 
             var originalGeneration = new Generation();
-            originalGeneration.generateOriginalGeneration();
+            originalGeneration.GenerateOriginalGeneration();
 
             var initialGeneration = new Generation();
-            initialGeneration.generateInitialGeneration();
+            initialGeneration.GenerateInitialGeneration();
 
 
             for (int i = 0; i < EvolutionParameters.NumberOfGenerations; i++)
             {
                 var generation = new Generation();
-                generation.generateRegularGeneration();
+                generation.GenerateRegularGeneration();
             }
                 
             RobotInteraction.Finish();

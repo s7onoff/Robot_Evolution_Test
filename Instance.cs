@@ -8,50 +8,80 @@ namespace Robot_Evolution
 {
     public static class OriginalPart
     {
-        public static List<Node> OriginalNodes { get; set; } = new List<Node>();
-        public static List<Beam> OriginalBeams { get; set; } = new List<Beam>();
+        // public static List<Node> OriginalNodes { get; set; } = new List<Node>();
+        // public static List<Beam> OriginalBeams { get; set; } = new List<Beam>();
     }
     public class Instance
     {
         //TODO: Parents
-        public int id { get; set; }
-        public int generationId { get; set; }
+        public int ID { get; set; }
+        public int GenerationID { get; set; }
+        
+        private int freeNodeID = 1;
+
+        public int FreeNodeID
+        {
+            get { return freeNodeID++; }
+            set { freeNodeID = value; }
+        }
+
+        private int freeBeamID = 1;
+
+        public int FreeBeamID
+        {
+            get { return freeBeamID++; }
+            set { freeBeamID = value; }
+        }
+
+        // public int FreeNodeID { get; set; } = 1;
+        // public int FreeBeamID { get; set; } = 1;
+        public List<Node> MutatedNodes { get; set; }
+        public static List<Node> OriginalNodes { get; set; } = new List<Node>();
+        public List<Beam> MutatedBeams { get; set; }
+        public static List<Beam> OriginalBeams { get; set; } = new List<Beam>();
+        public Result Result { get; set; }
+
+
 
         public Instance()
         {
             MutatedNodes = new List<Node>();
             MutatedBeams = new List<Beam>();
-            OriginalNodes = OriginalPart.OriginalNodes;
-            OriginalBeams = OriginalPart.OriginalBeams;
+            // OriginalNodes = OriginalPart.OriginalNodes;
+            // OriginalBeams = OriginalPart.OriginalBeams;
             Result = new Result();
+            //FreeNodeID = this.Nodes().Any() ? this.Nodes().Max(n => n.ID) + 1 : 1;
+            //FreeBeamID = this.Beams().Any() ? this.Beams().Max(n => n.ID) + 1 : 1;
+
+            FreeNodeID = OriginalNodes.Any() ? OriginalNodes.Max(n => n.ID) + 1 : 1;
+            FreeBeamID = OriginalBeams.Any() ? OriginalBeams.Max(n => n.ID) + 1 : 1;
         }
         public List<Node> Nodes()
         {
             return OriginalNodes.Concat(MutatedNodes).ToList();
         }
-        public List<Node> MutatedNodes { get; set; }
-        public List<Node> OriginalNodes { get; set; }
-        public List<Beam> MutatedBeams { get; set; }
-        public List<Beam> OriginalBeams { get; set; }
-        public Result Result { get; set; }
-
+        public List<Beam> Beams()
+        {
+            return OriginalBeams.Concat(MutatedBeams).ToList();
+        }
         public void ReadOriginalFromRobot()
         {
             OriginalNodes = new List<Node>();
             OriginalBeams = new List<Beam>();
+
             var nodesFromRobot = RobotInteraction.ReadNodes();
-            var nodeId = 1;
             foreach (var nodeRobot in nodesFromRobot)
             {
-                var node = new Node(nodeRobot.X, nodeRobot.Y);
-                node.ID = nodeId;
-                node.RobotID = nodeRobot.Number;
+                var node = new Node(nodeRobot.X, nodeRobot.Y, FreeNodeID)
+                {
+                    RobotID = nodeRobot.Number
+                };
                 OriginalNodes.Add(node);
-                OriginalPart.OriginalNodes.Add(node);
+                //OriginalPart.OriginalNodes.Add(node);
             }
 
             var beamsFromRobot = RobotInteraction.ReadBeams();
-            var beamId = 1;
+
             foreach (var beamRobot in beamsFromRobot)
             {
                 var node1RobotNumber = beamRobot.Node1;
@@ -68,11 +98,10 @@ namespace Robot_Evolution
                 {
                     section = Sections.CreateSection(sectionLabel);
                 }
-                var beam = new Beam(node1, node2, section);
-                beam.ID = beamId;
+                var beam = new Beam(node1, node2, section, FreeBeamID);
                 beam.RobotID = beamRobot.Number;
                 OriginalBeams.Add(beam);
-                OriginalPart.OriginalBeams.Add(beam);
+                // OriginalPart.OriginalBeams.Add(beam);
             }
         }
 
@@ -80,7 +109,7 @@ namespace Robot_Evolution
         {
             RobotInteraction.AddMutations(this);
             this.Result = RobotInteraction.CalcResult();
-            if (this.generationId % EvolutionParameters.SaveEveryNGeneration == 0)
+            if (this.GenerationID % EvolutionParameters.SaveEveryNGeneration == 0)
             {
                 RobotInteraction.SaveAs(this);
             }
@@ -118,9 +147,15 @@ namespace Robot_Evolution
         public double X { get; set; }
         public double Y { get; set; }
 
-        public Node(double x, double y)
+        public Node(double x, double y, int id)
         {
             X = x; Y = y;
+            ID = id;
+        }
+
+        public List<(Beam beam, int node)> ConnectedBeams(Instance instance)
+        {
+            return instance.Beams().Where(b => b.Node1.ID == this.ID || b.Node2.ID == this.ID).Select(b => b.Node1.ID == ID ? (b, 1) : (b, 2)).ToList();
         }
     }
 
@@ -132,11 +167,12 @@ namespace Robot_Evolution
         public Node Node2 { get; set; }
         public Section Section { get; set; }
 
-        public Beam(Node node1, Node node2, Section section)
+        public Beam(Node node1, Node node2, Section section, int id)
         {
             Node1 = node1;
             Node2 = node2;
             Section = section;
+            ID = id;
         }
     }
 

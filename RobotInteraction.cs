@@ -21,7 +21,7 @@ namespace Robot_Evolution
             Project.CalcEngine.AnalysisParams.IgnoreWarnings = true;
             Project.Structure.ResultsFreeze = false;
             Project.CalcEngine.AutoFreezeResults = false;
-            
+            Project.CalcEngine.GenerationParams.GenerateNodes_DiagonalBars = true;            
         }
 
         public static void Finish()
@@ -46,7 +46,7 @@ namespace Robot_Evolution
 
         public static void SaveAs(Instance instance)
         {
-            var filename = "_g_" + instance.generationId + "_i_" + instance.id + ".rtd";
+            var filename = "_g_" + instance.GenerationID + "_i_" + instance.ID + ".rtd";
             var path = Path.Combine(InitialData.WorkingDirectory, filename);
             Project.SaveAs(path);
         }
