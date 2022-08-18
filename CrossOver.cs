@@ -7,11 +7,12 @@ namespace Robot_Evolution
 {
     public static class CrossOver
     {
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         private static readonly Random randomGenerator = new Random();
 
         public static Instance Crosover(Instance parent1, Instance parent2)
         {
-            Logging.Logger.Debug("Crossing over parents: {0}, {1}", parent1.ID, parent2.ID);
+            Logger.Debug("Crossing over parents: {0}, {1}", parent1.ID, parent2.ID);
             var child = new Instance();
 
             var parents = new List<Instance>() { parent1, parent2 };

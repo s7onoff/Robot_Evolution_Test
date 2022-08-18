@@ -2,11 +2,11 @@
 {
     public static class EvolutionParameters
     {
-        public static int NewNodesInInitialGeneration { get; } = 8;
-        public static int NewBeamsInInitialGeneration { get; } = 10;
+        public static int NewNodesInInitialGeneration { get; } = 5;
+        public static int NewBeamsInInitialGeneration { get; } = 7;
 
         public static int NumberOfGenerations { get; } = 100; //TODO: change to results of fitting function
-        public static int InstancesPerGeneration { get; } = 25;
+        public static int InstancesPerGeneration { get; } = 5;
         public static int SaveEveryNGeneration { get; } = 10;
 
 

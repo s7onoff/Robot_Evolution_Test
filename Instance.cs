@@ -108,12 +108,16 @@ namespace Robot_Evolution
         public void Execute()
         {
             RobotInteraction.AddMutations(this);
+            RobotInteraction.CheckIntegrity(this, "after adding mutations");
             this.Result = RobotInteraction.CalcResult();
-            if (this.GenerationID % EvolutionParameters.SaveEveryNGeneration == 0)
+            RobotInteraction.CheckIntegrity(this, "after calculations");
+            if (this.GenerationID % EvolutionParameters.SaveEveryNGeneration == 0 || GenerationID <= 5)
             {
                 RobotInteraction.SaveAs(this);
             }
+            RobotInteraction.CheckIntegrity(this, "after save");
             RobotInteraction.DeleteMutations(this);
+            RobotInteraction.CheckIntegrity(this, "after deleting mutations");
             // TODO: serialize this
         }
 
@@ -142,6 +146,7 @@ namespace Robot_Evolution
 
     public class Node
     {
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         public int ID { get; set; }
         public int RobotID { get; set; }
         public double X { get; set; }
@@ -155,12 +160,16 @@ namespace Robot_Evolution
 
         public List<(Beam beam, int node)> ConnectedBeams(Instance instance)
         {
-            return instance.Beams().Where(b => b.Node1.ID == this.ID || b.Node2.ID == this.ID).Select(b => b.Node1.ID == ID ? (b, 1) : (b, 2)).ToList();
+            var list = instance.Beams().Where(b => b.Node1 == this || b.Node2 == this).Select(b => b.Node1.ID == ID ? (b, 1) : (b, 2)).ToList();
+            Logger.Debug("For node {0} of instance {1}, list of connected beams: {2}", ID, instance.ID, string.Join(" | ", list.Select(beam => string.Join("/", beam.b.ID, beam.b.RobotID))));
+            return list;
+            
         }
     }
 
     public class Beam
     {
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         public int ID { get; set; }
         public int RobotID { get; set; }
         public Node Node1 { get; set; }

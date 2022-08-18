@@ -36,11 +36,12 @@ namespace Robot_Evolution
 
     class Program
     {
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         static void Main(string[] args)
         {
             InitialData.Start();
             Logging.SetLoggingConfiguration();
-            Logging.Logger.Info("Evolution Started");
+            Logger.Info("Evolution Started");
 
             var originalGeneration = new Generation();
             originalGeneration.GenerateOriginalGeneration();
@@ -57,9 +58,13 @@ namespace Robot_Evolution
                 
             RobotInteraction.Finish();
 
+            Console.WriteLine("Finished");
+
             Console.ReadLine();
 
-            // TODO: Logging
+            NLog.LogManager.Shutdown();
+
+            
             // TODO: Serializing data
             // TODO: Continuing calculations after
             // TODO: Graphics visualization

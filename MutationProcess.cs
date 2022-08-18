@@ -8,6 +8,7 @@ namespace Robot_Evolution
 {
     public class MutationProcess
     {
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         public abstract class Mutation
         {
             public double Probability { get; set; }
@@ -24,13 +25,14 @@ namespace Robot_Evolution
                 if (node != null)
                 {
                     var amplitude = EvolutionParameters.NodeMovementPerMutation;
-                    double xMove;
-                    double yMove;
+                    double xMove = 0;
+                    double yMove = 0;
                     bool check;
+                    var checksTries = 0;
                     do
                     {
-                        xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude));
-                        yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude));
+                        xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude) * 2);
+                        yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude) * 2);
 
                         check = GeometryMethods.NodeInsideWF(node.X + xMove, node.Y + yMove);
                         foreach (var beam in node.ConnectedBeams(instance))
@@ -44,6 +46,13 @@ namespace Robot_Evolution
                             {
                                 check = check || GeometryMethods.BeamInsideWF(beam.beam.Node1.X, beam.beam.Node1.Y, node.X + xMove, node.Y + yMove);
                             }
+                        }
+                        if (checksTries++ == 40)
+                        {
+                            xMove = 0;
+                            yMove = 0;
+                            Logger.Warn("Moving node failed after {0} attempts", checksTries);
+                            break;
                         }
                     }
                     while (!check);
@@ -168,7 +177,7 @@ namespace Robot_Evolution
         public static void Mutate(Instance instance)
         {
             var mutation = ChooseMutation(regularMutations);
-            Logging.Logger.Debug("Mutation chosen: {0} for instance {1}", mutation == null? "Nothing" : mutation.ToString(), instance.ID.ToString());
+            Logger.Debug("Mutation chosen: {0} for instance {1}", mutation == null? "Nothing" : mutation.ToString(), instance.ID.ToString());
 
             if (mutation != null)
             {
@@ -216,7 +225,9 @@ namespace Robot_Evolution
 
         public static Beam ChooseBeam(Instance instance)
         {
-            var beamNumber = RandomGenerator.Next(1, instance.MutatedBeams.Count());
+            // TODO: RandomGenerator.Next(1,1) - gives = 1. Check
+            // TODO: first member = 0?
+            var beamNumber = RandomGenerator.Next(0, instance.MutatedBeams.Count());
             return instance.MutatedBeams[beamNumber];
         }
 

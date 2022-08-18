@@ -6,6 +6,7 @@ namespace Robot_Evolution
 {
     public class Generation
     {
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         public List<Instance> Instances { get; set; }
         public int ID { get; set; }
         public int GenerationQuantity { get; set; } = EvolutionParameters.InstancesPerGeneration;
@@ -57,13 +58,13 @@ namespace Robot_Evolution
             // Non-crossed-over instances copied
             var nonCrossedOverChildren = ChooseChildsNonCrossedOver(previousGeneration.Instances.Count());
 
-            Logging.Logger.Debug("Generation: {0}. For non-crossover chosen: {1}", previousGeneration.ID, String.Join(", ", nonCrossedOverChildren));
+            Logger.Debug("Generation: {0}. For non-crossover chosen: {1}", previousGeneration.ID, String.Join(", ", nonCrossedOverChildren));
 
             foreach (var i in nonCrossedOverChildren)
             {
                 var instance = Clone(previousGeneration.Instances[i]);
                 instance.GenerationID = this.ID;
-                Logging.Logger.Debug("New cloned instance: {0}", instance.ID);
+                Logger.Debug("New cloned instance: {0}", instance.ID);
                 instance.Mutate();
                 instance.Execute();
                 this.Instances.Add(instance);
@@ -85,7 +86,7 @@ namespace Robot_Evolution
                     instance.Mutate();
                     instance.Execute();
                     this.Instances.Add(instance);
-                    Logging.Logger.Debug("New crossed over instance: {0}", instance.ID);
+                    Logger.Debug("New crossed over instance: {0}", instance.ID);
                 }
             }
 
@@ -93,7 +94,7 @@ namespace Robot_Evolution
         }
 
 
-
+        //TODO: Cloning -> another class
         private Node Clone(Node oldNode, int id)
         {
             var newNode = new Node(oldNode.X, oldNode.Y, id);
@@ -110,12 +111,12 @@ namespace Robot_Evolution
             // var node1OfOld = oldInstance.Nodes().Where(n => n.ID == oldBeam.Node1.ID).Select(n => n.ID).First();
             // var node2OfOld = oldInstance.Nodes().Where(n => n.ID == oldBeam.Node2.ID).Select(n => n.ID).First();
 
-            Logging.Logger.Debug("Nodes of old instance: {0}, {1}", oldBeam.Node1.ID, oldBeam.Node2.ID);
+            Logger.Debug("Nodes of old instance: {0}, {1}", oldBeam.Node1.ID, oldBeam.Node2.ID);
 
             var node1 = newInstance.Nodes().Where(n => n.ID == oldBeam.Node1.ID).First();
             var node2 = newInstance.Nodes().Where(n => n.ID == oldBeam.Node2.ID).First();
 
-            Logging.Logger.Debug("Nodes of new instance: {0}, {1}", node1.ID, node2.ID);
+            Logger.Debug("Nodes of new instance: {0}, {1}", node1.ID, node2.ID);
 
             var newBeam = new Beam(node1, node2, oldBeam.Section, newInstance.FreeBeamID);
             return newBeam;
@@ -133,13 +134,14 @@ namespace Robot_Evolution
             foreach (var node in oldInstance.MutatedNodes)
             {
                 newInstance.MutatedNodes.Add(Clone(node, node.ID));
-                Logging.Logger.Debug("Cloning node {0} from instance {1}_{2} to instance {3}_{4}", node.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
+                Logger.Debug("Cloning node {0} from instance {1}_{2} to instance {3}_{4}", node.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
+                // newInstance.FreeNodeID; надо вызвать, чтоб счетчик крутить. Нужен другой механизм кручения счетчика.
             }
 
             foreach (var beam in oldInstance.MutatedBeams)
             {
                 newInstance.MutatedBeams.Add(Clone(beam, oldInstance, newInstance));
-                Logging.Logger.Debug("Cloning beam {0} from instance {1}_{2} to instance {3}_{4}", beam.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
+                Logger.Debug("Cloning beam {0} from instance {1}_{2} to instance {3}_{4}", beam.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
             }
 
             return newInstance;
@@ -180,11 +182,11 @@ namespace Robot_Evolution
                 currentProbabilityNumber = probabilities[i];
             }
 
-            // Logging.Logger.Debug("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
+            // Logger.Debug("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
 
             //if (probabilities.Last() < 1)
             {
-                // Logging.Logger.Debug("probabilities.Last() < 1");
+                // Logger.Debug("probabilities.Last() < 1");
             }
 
             var random1 = randomGenerator.NextDouble();
@@ -193,8 +195,8 @@ namespace Robot_Evolution
             var parent1 = possiblePredecessors[Array.IndexOf(probabilities, probabilities.Where(number => random1 <= number).First())];
             var parent2 = possiblePredecessors[Array.IndexOf(probabilities, probabilities.Where(number => random2 <= number).First())];
 
-            // Logging.Logger.Debug("Random: {0}. Chosen: {1}", random1, parent1.ID);
-            // Logging.Logger.Debug("Random: {0}. Chosen: {1}", random2, parent2.ID);
+            // Logger.Debug("Random: {0}. Chosen: {1}", random1, parent1.ID);
+            // Logger.Debug("Random: {0}. Chosen: {1}", random2, parent2.ID);
 
             return (parent1, parent2);
         }

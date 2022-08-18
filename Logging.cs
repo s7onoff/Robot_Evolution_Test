@@ -16,6 +16,11 @@ namespace Robot_Evolution
                 FileName = Path.Combine(InitialData.WorkingDirectory, "creation.log")
             };
 
+            var robotLog = new NLog.Targets.FileTarget("robot logging")
+            {
+                FileName = Path.Combine(InitialData.WorkingDirectory, "robot.log")
+            };
+
             var debugLog = new NLog.Targets.FileTarget("Debug info")
             {
                 FileName = Path.Combine(InitialData.WorkingDirectory, "debug.log")
@@ -24,14 +29,13 @@ namespace Robot_Evolution
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
             // Rules for mapping loggers to targets            
-            logConfig.AddRule(LogLevel.Info, LogLevel.Fatal, creationLog);
-            logConfig.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
-            logConfig.AddRule(LogLevel.Debug, LogLevel.Info, debugLog);
+            logConfig.AddRule(LogLevel.Info, LogLevel.Fatal, creationLog, "Main");
+            logConfig.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole, "Main");
+            logConfig.AddRule(LogLevel.Debug, LogLevel.Fatal, debugLog, "Main");
+            logConfig.AddRule(LogLevel.Info, LogLevel.Fatal, robotLog, "Robot*");
 
             // Apply config           
             NLog.LogManager.Configuration = logConfig;
         }
-
-        public static NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
     }
 }
