@@ -91,7 +91,7 @@ namespace Robot_Evolution
                 var chosenNumber = RandomGenerator.Next(InitialData.WorkingField.ExteriorRing.NumPoints);
 
                 var firstPoint = InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber).Coordinate;
-                var secondPoint = InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber + 1).Coordinate;
+                var secondPoint = chosenNumber == InitialData.WorkingField.ExteriorRing.NumPoints - 1 ? InitialData.WorkingField.ExteriorRing.GetPointN(1).Coordinate : InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber + 1).Coordinate;
 
                 // Segment of the ring
                 var line = new NetTopologySuite.Geometries.LineSegment(firstPoint, secondPoint);
@@ -133,7 +133,7 @@ namespace Robot_Evolution
                 {
                     node1 = ChooseAnyNode(instance);
                     node2 = ChooseAnyNode(instance);
-                } while (!GeometryMethods.BeamInsideWF(node1, node2));
+                } while (!GeometryMethods.BeamInsideWF(node1, node2) && ); //TODO: TODO: TODO: Сделать так, чтобы тут отсекались балки, которые совпадают с существующими
 
                 var section = ChooseSection();
 

@@ -75,11 +75,12 @@ namespace Robot_Evolution
                 Logger.Debug("beam read with number {0}", beam.Number);
                 beamsCollection.Add(beam.Number);
             }
-            if (!originalBeams.Except(beamsCollection).Any())
+            if (originalBeams.Except(beamsCollection).Any())
             {
                 Logger.Error("Original beams are not the same!");
                 Logger.Info("Original beams: {0}", string.Join(", ", originalBeams));
                 Logger.Info("beamsCollection: {0}", string.Join(", ", beamsCollection));
+                Logger.Info("Diff: {0}", string.Join(", ", originalBeams.Except(beamsCollection.ToList())));
             }
         }
 
