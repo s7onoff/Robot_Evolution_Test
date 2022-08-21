@@ -103,21 +103,42 @@ namespace Robot_Evolution
                 OriginalBeams.Add(beam);
                 // OriginalPart.OriginalBeams.Add(beam);
             }
+
+            var contourPoints = RobotInteraction.ReadContour();
+
+            InitialData.WorkingField = GeometryMethods.WorkingFieldFromPoints(contourPoints);
+
+            var (maxX, maxY, minX, minY) = GeometryMethods.WorkingFieldboundaries(InitialData.WorkingField);
+            InitialData.WFBoundariesX = (minX, maxX);
+            InitialData.WFBoundariesY = (minY, maxY);
+        }
+
+        public Node ChooseNodeByCoordinates(double x, double y)
+        {
+            var nodes = Nodes();
+            if (nodes.Where(n => n.X == x && n.Y == y).Any())
+            {
+                return nodes.Where(n => n.X == x && n.Y == y).FirstOrDefault();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void Execute()
         {
             RobotInteraction.AddMutations(this);
-            RobotInteraction.CheckIntegrity(this, "after adding mutations");
+            // RobotInteraction.CheckIntegrity(this, "after adding mutations");
             this.Result = RobotInteraction.CalcResult();
-            RobotInteraction.CheckIntegrity(this, "after calculations");
-            if (this.GenerationID % EvolutionParameters.SaveEveryNGeneration == 0 || GenerationID <= 5)
+            // RobotInteraction.CheckIntegrity(this, "after calculations");
+            if (this.GenerationID % EvolutionParameters.SaveEveryNGeneration == 0)
             {
                 RobotInteraction.SaveAs(this);
             }
-            RobotInteraction.CheckIntegrity(this, "after save");
+            // RobotInteraction.CheckIntegrity(this, "after save");
             RobotInteraction.DeleteMutations(this);
-            RobotInteraction.CheckIntegrity(this, "after deleting mutations");
+            // RobotInteraction.CheckIntegrity(this, "after deleting mutations");
             // TODO: serialize this
         }
 
@@ -128,13 +149,19 @@ namespace Robot_Evolution
 
         public void MutateInitial()
         {
-            var newNodeMutation = new MutationProcess.NewNodeMutation();
-            for (int _ = 0; _ < EvolutionParameters.NewNodesInInitialGeneration; _++)
+            var newNodeMutation = new MutationProcess.NodeAddMutation();
+            for (int _ = 0; _ < EvolutionParameters.NewNodesInsideInitialGeneration; _++)
             {
                 newNodeMutation.Action(this);
             }
 
-            var newBeamMutation = new MutationProcess.NewBeamMutation();
+            var newNodeOnContourMutation = new MutationProcess.NodeAddOnContourMutation();
+            for (int _ = 0; _ < EvolutionParameters.NewNodesOnContourGeneration; _++)
+            {
+                newNodeOnContourMutation.Action(this);
+            }
+
+            var newBeamMutation = new MutationProcess.BeamAddMutation();
             for (int _ = 0; _ < EvolutionParameters.NewBeamsInInitialGeneration; _++)
             {
                 newBeamMutation.Action(this);
@@ -146,7 +173,7 @@ namespace Robot_Evolution
 
     public class Node
     {
-        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Creation");
         public int ID { get; set; }
         public int RobotID { get; set; }
         public double X { get; set; }
@@ -161,7 +188,11 @@ namespace Robot_Evolution
         public List<(Beam beam, int node)> ConnectedBeams(Instance instance)
         {
             var list = instance.Beams().Where(b => b.Node1 == this || b.Node2 == this).Select(b => b.Node1.ID == ID ? (b, 1) : (b, 2)).ToList();
-            Logger.Debug("For node {0} of instance {1}, list of connected beams: {2}", ID, instance.ID, string.Join(" | ", list.Select(beam => string.Join("/", beam.b.ID, beam.b.RobotID))));
+            Logger.Debug(
+                "For node {0} of instance {1}, list of connected beams: {2}", 
+                ID, instance.ID, 
+                string.Join(" | ", list.Select(beam => string.Join("/", beam.b.ID)))
+                );
             return list;
             
         }
@@ -169,7 +200,7 @@ namespace Robot_Evolution
 
     public class Beam
     {
-        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Creation");
         public int ID { get; set; }
         public int RobotID { get; set; }
         public Node Node1 { get; set; }
@@ -190,6 +221,7 @@ namespace Robot_Evolution
         public double Deflection { get; set; }
         public double Weight { get; set; }
         public double Probability { get; set; }
+        public double AverageDeflection { get; set; }
         public IRobotCalculationStatus RobotCalculationStatus { get; set; }
     }
 }

@@ -8,7 +8,9 @@ namespace Robot_Evolution
 {
     public class MutationProcess
     {
-        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Creation");
+        
+        private static readonly Random RandomGenerator = new Random();
         public abstract class Mutation
         {
             public double Probability { get; set; }
@@ -24,17 +26,34 @@ namespace Robot_Evolution
                 var node = ChooseMutatedNode(instance);
                 if (node != null)
                 {
-                    var amplitude = EvolutionParameters.NodeMovementPerMutation;
-                    double xMove = 0;
-                    double yMove = 0;
+                    double xMove;
+                    double yMove;
+
                     bool check;
                     var checksTries = 0;
+
+                    var amplitude = EvolutionParameters.NodeMovementPerMutation;
                     do
                     {
-                        xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude) * 2);
-                        yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude) * 2);
+                        // If node is on contour - move along relevant line
+                        if (GeometryMethods.PointOnContour(node.X, node.Y))
+                        {
+                            var line = GeometryMethods.GetContourLineOfContourPoint(node.X, node.Y);
+                            var randomPointOnTheLine = line.PointAlong(RandomGenerator.NextDouble());
+                            xMove = node.X - randomPointOnTheLine.X;
+                            yMove = node.Y - randomPointOnTheLine.Y;
+                        }
+                        // If node is somewhere inside - move randomly
+                        else
+                        {
+                            xMove = (amplitude - (RandomGenerator.NextDouble() * amplitude) * 2);
+                            yMove = (amplitude - (RandomGenerator.NextDouble() * amplitude) * 2);
+                        }
 
-                        check = GeometryMethods.NodeInsideWF(node.X + xMove, node.Y + yMove);
+                        // If point went outside of border - check failed
+                        check = GeometryMethods.PointInsideWF(node.X + xMove, node.Y + yMove);
+
+                        // If any connected beam moved outside of border - check failed
                         foreach (var beam in node.ConnectedBeams(instance))
                         {
                             if (beam.node == 1)
@@ -47,6 +66,8 @@ namespace Robot_Evolution
                                 check = check || GeometryMethods.BeamInsideWF(beam.beam.Node1.X, beam.beam.Node1.Y, node.X + xMove, node.Y + yMove);
                             }
                         }
+
+                        // We don't want to to this checks a lot of time
                         if (checksTries++ == 40)
                         {
                             xMove = 0;
@@ -59,11 +80,13 @@ namespace Robot_Evolution
 
                     node.X += xMove;
                     node.Y += yMove;
+
+                    Logger.Debug("Node {0} moved by {1}, {2}", node.ID, xMove, yMove);
                 }
             }
         }
 
-        public class NewNodeMutation : Mutation
+        public class NodeAddMutation : Mutation
         {
             public override void Action(Instance instance)
             {
@@ -76,22 +99,31 @@ namespace Robot_Evolution
                     x = (RandomGenerator.NextDouble() * amplitudeX) + InitialData.WFBoundariesX.minX;
                     y = (RandomGenerator.NextDouble() * amplitudeY) + InitialData.WFBoundariesY.minY;
                 }
-                while (!GeometryMethods.NodeInsideWF(x, y));
+                while (!GeometryMethods.PointInsideWF(x, y));
 
                 var node = new Node(x, y, instance.FreeNodeID);
                 instance.MutatedNodes.Add(node);
+
+                Logger.Debug("Node {0} added", node.ID);
+
+                var addBeamMutation = new BeamAddMutation();
+                addBeamMutation.Action(instance, node);
             }
         }
 
-        public class NewNodeOnContourMutation : Mutation
+        public class NodeAddOnContourMutation : Mutation
         {
             public override void Action(Instance instance)
             {
                 // Choosing random line on a ring
-                var chosenNumber = RandomGenerator.Next(InitialData.WorkingField.ExteriorRing.NumPoints);
+                var pointsOfContour = InitialData.WorkingField.ExteriorRing.NumPoints;
+                var chosenNumber = RandomGenerator.Next(pointsOfContour);
 
                 var firstPoint = InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber).Coordinate;
-                var secondPoint = chosenNumber == InitialData.WorkingField.ExteriorRing.NumPoints - 1 ? InitialData.WorkingField.ExteriorRing.GetPointN(1).Coordinate : InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber + 1).Coordinate;
+                var secondPoint = 
+                    chosenNumber == InitialData.WorkingField.ExteriorRing.NumPoints - 1 ? 
+                    InitialData.WorkingField.ExteriorRing.GetPointN(1).Coordinate : 
+                    InitialData.WorkingField.ExteriorRing.GetPointN(chosenNumber + 1).Coordinate;
 
                 // Segment of the ring
                 var line = new NetTopologySuite.Geometries.LineSegment(firstPoint, secondPoint);
@@ -101,6 +133,7 @@ namespace Robot_Evolution
                 var node = new Node(randomPointOnTheLine.X, randomPointOnTheLine.Y, instance.FreeNodeID);
 
                 instance.MutatedNodes.Add(node);
+                Logger.Debug("Node {0} added", node.ID);
             }
         }
 
@@ -112,34 +145,62 @@ namespace Robot_Evolution
                 if (node != null)
                 {
                     instance.MutatedNodes.Remove(node);
-                }
+                    var beams = node.ConnectedBeams(instance);
 
-                var beams = node.ConnectedBeams(instance);
-                foreach (var beam in beams)
-                {
-                    instance.MutatedBeams.Remove(beam.beam);
+                    foreach (var beam in beams)
+                    {
+                        instance.MutatedBeams.Remove(beam.beam);
+                    }
                 }
             }
         }
 
-        public class NewBeamMutation : Mutation
+        public class BeamAddMutation : Mutation
         {
             public override void Action(Instance instance)
             {
                 Node node1;
                 Node node2;
 
+                var beams = instance.Beams();
                 do
                 {
                     node1 = ChooseAnyNode(instance);
                     node2 = ChooseAnyNode(instance);
-                } while (!GeometryMethods.BeamInsideWF(node1, node2) && ); //TODO: TODO: TODO: Сделать так, чтобы тут отсекались балки, которые совпадают с существующими
+                    // do this until chosen nodes wouldn't form a beam, that:
+                    //      1) lays inside Working Field
+                    //      2) doesn't lays along any other existing beam
+                } while (!GeometryMethods.BeamInsideWF(node1, node2) || GeometryMethods.BeamLaysAlongAnyOfBeams(node1.X, node1.Y, node2.X, node2.Y, beams));
 
                 var section = ChooseSection();
 
                 var beam = new Beam(node1, node2, section, instance.FreeBeamID);
 
                 instance.MutatedBeams.Add(beam);
+                Logger.Debug("Beam {0} added", beam.ID);
+            }
+
+            public void Action(Instance instance, Node node1)
+            {
+                Node node2;
+
+                var beams = instance.Beams();
+                do
+                {
+                    node2 = ChooseAnyNode(instance);
+                    // do this until chosen nodes wouldn't form a beam, that:
+                    //      1) lays inside Working Field
+                    //      2) doesn't lays along any other existing beam
+                    var check1 = !GeometryMethods.BeamInsideWF(node1, node2);
+                    var check2 = GeometryMethods.BeamLaysAlongAnyOfBeams(node1.X, node1.Y, node2.X, node2.Y, beams);
+                } while (!GeometryMethods.BeamInsideWF(node1, node2) || GeometryMethods.BeamLaysAlongAnyOfBeams(node1.X, node1.Y, node2.X, node2.Y, beams));
+
+                var section = ChooseSection();
+
+                var beam = new Beam(node1, node2, section, instance.FreeBeamID);
+
+                instance.MutatedBeams.Add(beam);
+                Logger.Debug("Beam {0} added", beam.ID);
             }
         }
 
@@ -148,36 +209,44 @@ namespace Robot_Evolution
             public override void Action(Instance instance)
             {
                 var beam = ChooseBeam(instance);
-                instance.MutatedBeams.Remove(beam);
+                if (beam != null) 
+                {
+                    instance.MutatedBeams.Remove(beam);
+                    Logger.Debug("Beam {0} removed", beam.ID);
+                }
             }
         }
 
-        public class ChangeBeamSectionMutation : Mutation
+        public class BeamChangeSectionMutation : Mutation
         {
             public override void Action(Instance instance)
             {
                 var beam = ChooseBeam(instance);
-                var section = ChooseSection();
-                beam.Section = section;
+                if (beam != null)
+                {
+                    var section = ChooseSection();
+                    beam.Section = section;
+                    Logger.Debug("Beam {0} section changed", beam.ID);
+                }
             }
         }
 
 
         public static List<Mutation> regularMutations = new List<Mutation>()
         {
-            new MoveNodeMutation(){ Probability = EvolutionParameters.MoveNodeProbability},
-            new NewNodeMutation(){Probability = EvolutionParameters.NewNodeInsideProbability},
-            new NewNodeOnContourMutation() {Probability = EvolutionParameters.NewNodeOnContourProbability},
-            new DeleteNodeMutation(){Probability = EvolutionParameters.NodeDeleteProbability},
-            new NewBeamMutation() { Probability = EvolutionParameters.BeamAddDeleteProbability},
-            new DeleteBeamMutation() { Probability = EvolutionParameters.BeamAddDeleteProbability},
-            new ChangeBeamSectionMutation() {Probability = EvolutionParameters.BeamChangeSectionProbability}
+            new MoveNodeMutation(){ Probability = EvolutionParameters.MoveNodeProbability },
+            new NodeAddMutation(){ Probability = EvolutionParameters.NodeAddInsideProbability },
+            new NodeAddOnContourMutation() { Probability = EvolutionParameters.NodeAddOnContourProbability },
+            new DeleteNodeMutation(){ Probability = EvolutionParameters.NodeDeleteProbability },
+            new BeamAddMutation() { Probability = EvolutionParameters.BeamAddProbability },
+            new DeleteBeamMutation() { Probability = EvolutionParameters.BeamDeleteProbability },
+            new BeamChangeSectionMutation() { Probability = EvolutionParameters.BeamChangeSectionProbability }
         };
 
         public static void Mutate(Instance instance)
         {
             var mutation = ChooseMutation(regularMutations);
-            Logger.Debug("Mutation chosen: {0} for instance {1}", mutation == null? "Nothing" : mutation.ToString(), instance.ID.ToString());
+            Logger.Debug("Mutation chosen: {0} for instance {1}_{2}", mutation == null? "Nothing" : mutation.ToString(), instance.GenerationID, instance.ID);
 
             if (mutation != null)
             {
@@ -186,11 +255,8 @@ namespace Robot_Evolution
         }
 
 
-        private static readonly Random RandomGenerator = new Random();
-
         private static Mutation ChooseMutation(List<Mutation> mutations)
         {
-            // Random gives us double from 0 to 1
             var randomResult = RandomGenerator.NextDouble();
 
             // Boundaries are to choose mutation with preset probabilities 
@@ -225,10 +291,13 @@ namespace Robot_Evolution
 
         public static Beam ChooseBeam(Instance instance)
         {
-            // TODO: RandomGenerator.Next(1,1) - gives = 1. Check
-            // TODO: first member = 0?
-            var beamNumber = RandomGenerator.Next(0, instance.MutatedBeams.Count());
-            return instance.MutatedBeams[beamNumber];
+            if (instance.MutatedBeams.Count() > 0)
+            {
+                var beamNumber = RandomGenerator.Next(0, instance.MutatedBeams.Count());
+                return instance.MutatedBeams[beamNumber];
+            }
+            else return null;
+            
         }
 
         public static Section ChooseSection()

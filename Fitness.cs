@@ -10,22 +10,40 @@ namespace Robot_Evolution
     {
         public static Result BestResultForDeflection { get; set; } = new Result();
         public static Result BestResultForWeight { get; set; } = new Result();
-        public static double WeightCorrelationFactor { get; set; } = 0.3;
+        public static double WeightCorrelationFactor { get; set; } = 0.15;
+        public static double DeflectionCorrelationFactor { get; set; } = 0.75;
+        public static double AvegareDeflectionCorrelationFactor { get; set; } = 0.1;
         public static void RegisterResult(Generation generation)
         {
-            var sumPreProbabilities = generation.Instances.Where(inst => inst.Result.Deflection*inst.Result.Weight != 0).Sum(inst => 1 / (Math.Abs(inst.Result.Deflection) * inst.Result.Weight));
+            var nonZeroResults = generation.Instances.
+                Where(inst => inst.Result.Deflection * inst.Result.Weight != 0).
+                Select(inst => inst.Result);
 
+            var sumPreProbabilitiesForDeflection = nonZeroResults.Sum(res => 1 / Math.Abs(res.Deflection));
+            var sumPreProbabilitiesForAverageDeflection = nonZeroResults.Sum(res => 1 / Math.Abs(res.AverageDeflection));
+            var sumPreProbabilitiesForWeight = nonZeroResults.Sum(res => 1 / res.Weight);
 
-            foreach (var instance in generation.Instances)
+            var zeroResults = generation.Instances.
+                Where(inst => inst.Result.Deflection * inst.Result.Weight == 0).
+                Select(inst => inst.Result);
+
+            foreach (var result in nonZeroResults)
             {
-                if (instance.Result.Deflection != 0 && instance.Result.Weight != 0)
-                {
-                    instance.Result.Probability = 1 / (Math.Abs(instance.Result.Deflection) * instance.Result.Weight * sumPreProbabilities);
-                }
-                else
-                {
-                    instance.Result.Probability = 0;
-                }
+                result.Probability =
+                    DeflectionCorrelationFactor /
+                    ( Math.Abs(result.Deflection) * sumPreProbabilitiesForDeflection ) 
+                    +
+                    WeightCorrelationFactor / 
+                    (result.Weight * sumPreProbabilitiesForWeight)
+                    +
+                    AvegareDeflectionCorrelationFactor /
+                    (Math.Abs(result.AverageDeflection) * sumPreProbabilitiesForAverageDeflection)
+                    ;
+            }
+
+            foreach (var result in zeroResults)
+            {
+                result.Probability = 0;
             }
         }
     }

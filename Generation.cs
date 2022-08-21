@@ -6,7 +6,7 @@ namespace Robot_Evolution
 {
     public class Generation
     {
-        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
+        public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Creation");
         public List<Instance> Instances { get; set; }
         public int ID { get; set; }
         public int GenerationQuantity { get; set; } = EvolutionParameters.InstancesPerGeneration;
@@ -106,7 +106,6 @@ namespace Robot_Evolution
         private Beam Clone(Beam oldBeam, Instance oldInstance, Instance newInstance)
         {
             // works only if previously all the nodes was cloned
-            
 
             // var node1OfOld = oldInstance.Nodes().Where(n => n.ID == oldBeam.Node1.ID).Select(n => n.ID).First();
             // var node2OfOld = oldInstance.Nodes().Where(n => n.ID == oldBeam.Node2.ID).Select(n => n.ID).First();
@@ -135,7 +134,6 @@ namespace Robot_Evolution
             {
                 newInstance.MutatedNodes.Add(Clone(node, node.ID));
                 Logger.Debug("Cloning node {0} from instance {1}_{2} to instance {3}_{4}", node.ID, oldInstance.GenerationID, oldInstance.ID, newInstance.GenerationID, newInstance.ID);
-                // newInstance.FreeNodeID; надо вызвать, чтоб счетчик крутить. Нужен другой механизм кручения счетчика.
             }
 
             foreach (var beam in oldInstance.MutatedBeams)
@@ -163,8 +161,6 @@ namespace Robot_Evolution
                 list.Add(randomNumber);
             }
 
-            
-
             return list;
         }
 
@@ -173,6 +169,11 @@ namespace Robot_Evolution
         {
             var possiblePredecessors = predecessors.Where(inst => inst.Result.Deflection * inst.Result.Weight != 0).ToList();
 
+            if(possiblePredecessors.Count == 0)
+            {
+                return (null, null);
+            }
+
             double[] probabilities = new double[possiblePredecessors.Count];       
 
             var currentProbabilityNumber = 0.0;
@@ -180,13 +181,6 @@ namespace Robot_Evolution
             {
                 probabilities[i] = possiblePredecessors[i].Result.Probability + currentProbabilityNumber;
                 currentProbabilityNumber = probabilities[i];
-            }
-
-            // Logger.Debug("Probabilities list for choosing parents: {0}", String.Join(", ", probabilities));
-
-            //if (probabilities.Last() < 1)
-            {
-                // Logger.Debug("probabilities.Last() < 1");
             }
 
             var random1 = randomGenerator.NextDouble();

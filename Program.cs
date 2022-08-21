@@ -39,7 +39,7 @@ namespace Robot_Evolution
         public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Main");
         static void Main(string[] args)
         {
-            InitialData.Start();
+            RobotInteraction.Start();
             Logging.SetLoggingConfiguration();
             Logger.Info("Evolution Started");
 
