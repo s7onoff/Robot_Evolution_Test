@@ -6,9 +6,9 @@
         public static int NewNodesOnContourGeneration { get; } = 6;
         public static int NewBeamsInInitialGeneration { get; } = 8;
 
-        public static int NumberOfGenerations { get; } = 180; //TODO: change to results of fitting function
-        public static int InstancesPerGeneration { get; } = 25;
-        public static int SaveEveryNGeneration { get; } = 10;
+        public static int NumberOfGenerations { get; } = 120; //TODO: change to results of fitting function
+        public static int InstancesPerGeneration { get; } = 50;
+        public static int SaveEveryNGeneration { get; } = 30;
 
 
         // Mutations probabilities

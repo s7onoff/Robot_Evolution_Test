@@ -20,7 +20,7 @@ namespace Robot_Evolution
 
             if(generation.Instances.Where(ins => ins.Result.Probability == 0).Count() > 0.4 * generation.Instances.Count() && generation.ID > 1)
             {
-                GenerationLogger.Error("Generation failed");
+                GenerationLogger.Error("Generation failed!");
             }
         }
 
@@ -30,10 +30,10 @@ namespace Robot_Evolution
                 generation.ID.ToString());
             GenerationLogger.Info("Number of instances: {0}", 
                 generation.Instances.Count());
-            GenerationLogger.Info("Average deflection:  {0}", 
+            GenerationLogger.Info("Average deflection of aim node:  {0}", 
                 string.Join(" \r\n ", 
                 generation.Instances.Select(ins => Math.Abs(ins.Result.Deflection)).Average()));
-            GenerationLogger.Info("Average average deflection:  {0}", 
+            GenerationLogger.Info("Average deflection of whole model:  {0}", 
                 string.Join(" \r\n ", 
                 generation.Instances.Select(ins => Math.Abs(ins.Result.AverageDeflection)).Average()));
             GenerationLogger.Info("Average weight:  {0}",
@@ -43,10 +43,10 @@ namespace Robot_Evolution
                 string.Join(" \r\n ",
                 generation.Instances.Select(ins => ins.Beams().Count()).Average()));
 
-            CreationLogger.Info("Deflections:  \r\n {0}", 
+            CreationLogger.Info("Deflections of Node:  \r\n {0}", 
                 string.Join(" \r\n ", 
                 generation.Instances.Select(ins => ins.GenerationID + " | " + ins.ID + " | " + ins.Result.Deflection.ToString()).ToArray()));
-            CreationLogger.Info("Average Deflections:  \r\n {0}", 
+            CreationLogger.Info("Average Deflections of models:  \r\n {0}", 
                 string.Join(" \r\n ", 
                 generation.Instances.Select(ins => ins.GenerationID + " | " + ins.ID + " | " + ins.Result.AverageDeflection.ToString()).ToArray()));
             CreationLogger.Info("Weights:  \r\n {0}", 
@@ -64,13 +64,13 @@ namespace Robot_Evolution
 
         private static void LogInstance(Instance instance)
         {
-            CreationLogger.Info("Generation {0} | Instance {1}",
+            CreationLogger.Debug("Generation {0} | Instance {1}",
                                 instance.GenerationID,
                                 instance.ID);
-            CreationLogger.Info("Instance Nodes: \r\n {0}", 
+            CreationLogger.Debug("Instance Nodes: \r\n {0}", 
                 string.Join(" \r\n ", 
                 instance.Nodes().Select(node => string.Join(" | ", node.ID, node.X, node.Y))));
-            CreationLogger.Info("Instance Beams: \r\n {0}", 
+            CreationLogger.Debug("Instance Beams: \r\n {0}", 
                 string.Join(" \r\n ", 
                 instance.Beams().Select(beam => string.Join(" | ", beam.ID, beam.Node1.ID, beam.Node2.ID))));
             //var nodesOfBeams = instance.Beams().Select(b => b.Node1.ID).Concat(instance.Beams().Select(b => b.Node2.ID));

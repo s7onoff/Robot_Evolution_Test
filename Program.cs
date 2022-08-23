@@ -41,7 +41,7 @@ namespace Robot_Evolution
         {
             RobotInteraction.Start();
             Logging.SetLoggingConfiguration();
-            Logger.Info("Evolution Started");
+            Logger.Info("!Evolution Started!");
 
             var originalGeneration = new Generation();
             originalGeneration.GenerateOriginalGeneration();
@@ -58,13 +58,10 @@ namespace Robot_Evolution
                 
             RobotInteraction.Finish();
 
-            Console.WriteLine("Finished");
-
-            Console.ReadLine();
+            Logger.Info("!Evolution Finished!");
 
             NLog.LogManager.Shutdown();
 
-            
             // TODO: Serializing data
             // TODO: Continuing calculations after
             // TODO: Graphics visualization

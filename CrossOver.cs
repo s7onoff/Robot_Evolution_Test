@@ -10,6 +10,7 @@ namespace Robot_Evolution
         public static readonly NLog.Logger Logger = NLog.LogManager.GetLogger("Crossover");
         private static readonly Random randomGenerator = new Random();
 
+        #region old
         //public static Instance CrosoverOld(Instance parent1, Instance parent2)
         //{
         //    Logger.Debug("Crossing over. Generation {0}. Parents: {1}, {2}", parent1.GenerationID, parent1.ID, parent2.ID);
@@ -67,6 +68,7 @@ namespace Robot_Evolution
 
         //    return child;
         //}
+        #endregion old
 
         public static Instance Crosover(Instance parent1, Instance parent2)
         {
@@ -84,7 +86,7 @@ namespace Robot_Evolution
                 AddBeam(parent1.MutatedBeams[i], child);
             }
 
-            for (int i = (int)Math.Round(parent2.MutatedBeams.Count * crossoverBorder, 0); i < parent2.MutatedBeams.Count; i++)
+            for (int i = (int)Math.Ceiling(parent2.MutatedBeams.Count * crossoverBorder); i < parent2.MutatedBeams.Count; i++)
             {
                 Logger.Debug("Trying to add beam {0} from parent {1}", i, parent2.ID);
                 AddBeam(parent2.MutatedBeams[i], child);
@@ -96,7 +98,7 @@ namespace Robot_Evolution
                 AddNode(parent1.MutatedNodes[i], child);
             }
 
-            for (int i = (int)Math.Round(parent2.MutatedNodes.Count * crossoverBorder, 0); i < parent2.MutatedNodes.Count; i++)
+            for (int i = (int)Math.Ceiling(parent2.MutatedNodes.Count * crossoverBorder); i < parent2.MutatedNodes.Count; i++)
             {
                 Logger.Debug("Trying to add node {0} from parent {1}", i, parent2.ID);
                 AddNode(parent2.MutatedNodes[i], child);

@@ -78,7 +78,7 @@ namespace Robot_Evolution
         public static void CheckIntegrity(Instance instance, string phase)
         {
             //TODO: after finding all bugs, turn this off to speed up algorythm
-            RobotLogger.Info("Checking integrity for gen: {0}, instance: {1}. {2}", instance.GenerationID, instance.ID, phase);
+            RobotLogger.Debug("Checking integrity for gen: {0}, instance: {1}. {2}", instance.GenerationID, instance.ID, phase);
             // needed to control bugs
             // var filename = "_g_" + instance.GenerationID + "_i_" + instance.ID + "_" + phase + ".rtd";
             // var path = Path.Combine(InitialData.WorkingDirectory, filename);
@@ -95,19 +95,19 @@ namespace Robot_Evolution
             if (originalBeams.Except(beamsCollection).Any())
             {
                 RobotLogger.Error("Original beams are not the same!");
-                RobotLogger.Info("Original beams: {0}", string.Join(", ", originalBeams));
-                RobotLogger.Info("beamsCollection: {0}", string.Join(", ", beamsCollection));
-                RobotLogger.Info("Diff: {0}", string.Join(", ", originalBeams.Except(beamsCollection.ToList())));
+                RobotLogger.Debug("Original beams: {0}", string.Join(", ", originalBeams));
+                RobotLogger.Debug("beamsCollection: {0}", string.Join(", ", beamsCollection));
+                RobotLogger.Debug("Diff: {0}", string.Join(", ", originalBeams.Except(beamsCollection.ToList())));
             }
             else
             {
-                RobotLogger.Info("Ingtegrity ok");
+                RobotLogger.Debug("Ingtegrity ok");
             }
         }
 
         public static void CreateSections()
         {
-            RobotLogger.Info("Creating sections");
+            RobotLogger.Debug("Creating sections");
             foreach (var section in Sections.SectionsToUse)
             {
                 RobotLogger.Info("Section {0} | robotDBName: {1}", section.Name, section.NameInRobotDB);
@@ -129,7 +129,7 @@ namespace Robot_Evolution
 
         public static List<(int Number, double X, double Y)> ReadNodes()
         {
-            RobotLogger.Info("Reading all nodes");
+            RobotLogger.Debug("Reading all nodes");
             var allNodes = RobotStructure.Nodes.GetAll();
             var nodesCollection = new List<(int Number, double X, double Y)>();
 
@@ -141,13 +141,13 @@ namespace Robot_Evolution
                     nodesCollection.Add((node.Number, node.X, node.Y));
                 }
             }
-            RobotLogger.Info("Nodes added: {0}", string.Join(", ", nodesCollection.Select(n => n.Number)));
+            RobotLogger.Debug("Nodes added: {0}", string.Join(", ", nodesCollection.Select(n => n.Number)));
             return nodesCollection;
         }
 
         public static List<(int Number, int Node1, int Node2, string SectionLabel)> ReadBeams()
         {
-            RobotLogger.Info("Reading all beams");
+            RobotLogger.Debug("Reading all beams");
             var allBeams = RobotStructure.Bars.GetAll();
             var beamsCollection = new List<(int Number, int Node1, int Node2, string SectionLabel)>();
             for (int i = 1; i < allBeams.Count + 1; i++)
@@ -156,7 +156,7 @@ namespace Robot_Evolution
                 RobotLogger.Debug("beam read with number {0}", beam.Number);
                 beamsCollection.Add((beam.Number, beam.StartNode, beam.EndNode, (beam.GetLabel(IRobotLabelType.I_LT_BAR_SECTION)).Name));
             }
-            RobotLogger.Info("Beams added: {0}", string.Join(", ", beamsCollection.Select(b => b.Number)));
+            RobotLogger.Debug("Beams added: {0}", string.Join(", ", beamsCollection.Select(b => b.Number)));
             return beamsCollection;
         }
 

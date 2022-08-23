@@ -7,9 +7,9 @@ namespace Robot_Evolution
     public static class InitialData
     {
         #region SystemData
-        // public static string WorkingDirectory { get; set; } = @"C:\Users\Sesemenov\Documents\!tmp\2022-08-15";
+        public static string WorkingDirectory { get; set; } = @"C:\Users\Sesemenov\Documents\!tmp\2022-08-15";
         // public static string WorkingDirectory { get; set; } = @"\\Fs-project\PS\01_PROJECTS_WD\2515_Lakhta_2_3\07_KM\02_CALC\03_FEA\00_Preliminary_calcs\01_Slab_Beams\Evolution_playing";
-        public static string WorkingDirectory { get; set; } = @"C:\Users\flood\Documents\Evolution_playing";
+        //public static string WorkingDirectory { get; set; } = @"C:\Users\flood\Documents\Evolution_playing";
         public static string OriginalFile = Path.Combine(WorkingDirectory, "Slab_Slice_00.rtd");
         #endregion SystemData
 

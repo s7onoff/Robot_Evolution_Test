@@ -8,11 +8,9 @@ namespace Robot_Evolution
 {
     public static class Fitness
     {
-        public static Result BestResultForDeflection { get; set; } = new Result();
-        public static Result BestResultForWeight { get; set; } = new Result();
-        public static double WeightCorrelationFactor { get; set; } = 0.15;
-        public static double DeflectionCorrelationFactor { get; set; } = 0.75;
-        public static double AvegareDeflectionCorrelationFactor { get; set; } = 0.1;
+        public static double WeightCorrelationFactor { get; } = 0.15;
+        public static double DeflectionCorrelationFactor { get; } = 0.7;
+        public static double AvegareDeflectionCorrelationFactor { get; } = 0.15;
         public static void RegisterResult(Generation generation)
         {
             var nonZeroResults = generation.Instances.
